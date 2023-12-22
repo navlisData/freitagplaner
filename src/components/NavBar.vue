@@ -1,18 +1,9 @@
-<script>
-export default {
-  methods: {
-    toggleDrawer() {
-      // Logic to toggle side navigation
-    },
-  },
-};
-</script>
 
 <template>
 
   <v-app-bar>
     <!-- Hamburger menu icon -->
-    <v-app-bar-nav-icon @click="toggleDrawer" v-if="$vuetify.display.smAndDown">
+    <v-app-bar-nav-icon @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown">
       <v-icon>mdi-menu</v-icon>
     </v-app-bar-nav-icon>
 
@@ -27,4 +18,41 @@ export default {
     <v-spacer></v-spacer>
   </v-app-bar>
 
+  <v-navigation-drawer
+      v-model="drawer"
+      :location="drawerLocation"
+      temporary="true"
+  >
+    <v-list
+        :items="items"
+    ></v-list>
+  </v-navigation-drawer>
+
 </template>
+
+
+<script>
+export default {
+  computed: {
+    drawerLocation() {
+      return this.$vuetify.display.xs ? 'bottom' : 'left';
+    },
+
+  },
+
+  data: () => ({
+    drawer: false,
+    items: [
+      {
+        title: 'Home',
+        value: 'Home',
+      },
+      {
+        title: 'Urlaub berechnen',
+        value: 'Urlaub berechnen',
+      },
+    ],
+  }),
+
+};
+</script>

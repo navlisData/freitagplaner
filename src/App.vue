@@ -25,8 +25,11 @@ export default {
 <!--  </header>-->
 
   <main>
+
     <v-app>
+
       <NavBar />
+
     </v-app>
 
 
