@@ -22,6 +22,7 @@
       v-model="drawer"
       :location="drawerLocation"
       temporary="true"
+      v-if="$vuetify.display.smAndDown"
   >
     <v-list
         :items="items"
