@@ -15,10 +15,10 @@ const vuetify = createVuetify({
 })
 //end vuetify
 
-//Begin router (Source: //https://www.youtube.com/watch?v=o62BwRSaEHo)
+//Begin router (With help of: //https://www.youtube.com/watch?v=o62BwRSaEHo)
 import {createRouter, createWebHashHistory} from "vue-router";
 import LandingPage from "@/components/LandingPage.vue";
-import Calculator from "@/components/Calculator.vue";
+import Calculator from "@/components/CalculatorPage.vue";
 
 const app = createApp(App)
 
