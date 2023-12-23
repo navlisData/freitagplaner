@@ -7,7 +7,7 @@ export default {
   },
 
   data: () => ({
-    drawer: false,
+    drawer: false
   }),
 
 };
@@ -17,24 +17,32 @@ export default {
   <v-app-bar
       absolute
       color="transparent"
-      shrink-on-scroll
       dense
+      flat
       app
   >
     <!-- Hamburger menu icon -->
-    <v-app-bar-nav-icon @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown">
-      <v-icon>mdi-menu</v-icon>
-    </v-app-bar-nav-icon>
+    <v-app-bar-nav-icon color="white" @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown"/>
 
-    <v-app-bar-title>FreiTagPlaner</v-app-bar-title>
+    <v-app-bar-title class="text-white">FreiTagPlaner</v-app-bar-title>
 
-    <v-btn v-if="$vuetify.display.mdAndUp">
-      <router-link class="router-link" to="/">Home</router-link>
-    </v-btn>
+    <div class="ga-6 d-flex flex-row">
+      <div v-if="$vuetify.display.mdAndUp">
+        <router-link class="router-link text-uppercase" to="/">Home</router-link>
+      </div>
 
-    <v-btn class="nav-btn" v-if="$vuetify.display.mdAndUp">
-      <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>
-    </v-btn>
+      <div v-if="$vuetify.display.mdAndUp">
+        <router-link class="router-link text-uppercase" to="/calculate">Urlaub berechnen</router-link>
+      </div>
+    </div>
+
+<!--    <v-btn v-if="$vuetify.display.mdAndUp">-->
+<!--      <router-link class="router-link" to="/">Home</router-link>-->
+<!--    </v-btn>-->
+
+<!--    <v-btn class="nav-btn" v-if="$vuetify.display.mdAndUp">-->
+<!--      <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>-->
+<!--    </v-btn>-->
 
     <!-- Spacer to center items -->
     <v-spacer></v-spacer>
@@ -65,9 +73,5 @@ export default {
 
 </template>
 
-<style>
-  .router-link {
-    text-decoration: none;
-  }
-</style>
+
 

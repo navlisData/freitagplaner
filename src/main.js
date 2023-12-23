@@ -15,7 +15,7 @@ const vuetify = createVuetify({
 })
 //end vuetify
 
-//Begin router
+//Begin router (Source: //https://www.youtube.com/watch?v=o62BwRSaEHo)
 import {createRouter, createWebHashHistory} from "vue-router";
 import LandingPage from "@/components/LandingPage.vue";
 import Calculator from "@/components/Calculator.vue";
@@ -33,9 +33,6 @@ const router = createRouter({
     linkActiveClass: "active"
 })
 //End router
-
-// createApp(App).use(vuetify).mount('#app')
-//https://www.youtube.com/watch?v=o62BwRSaEHo
 
 app.use(vuetify).use(router)
 app.mount('#app')
