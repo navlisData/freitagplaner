@@ -1,6 +1,21 @@
+<script>
+export default {
+  computed: {
+    drawerLocation() {
+      return this.$vuetify.display.xs ? 'bottom' : 'left';
+    },
+  },
+
+  data: () => ({
+    drawer: false,
+  }),
+
+};
+</script>
+
 <template>
   <v-app-bar
-      absolute="true"
+      absolute=""
       color="transparent"
       shrink-on-scroll
       dense
@@ -24,10 +39,10 @@
   <v-navigation-drawer
       v-model="drawer"
       :location="drawerLocation"
-      temporary="true"
+      temporary
       v-if="$vuetify.display.smAndDown"
   >
-    <v-list density="compact" nav="true">
+    <v-list density="compact" nav>
       <v-list-item
           prepend-icon="mdi-home"
           title="Home"
@@ -45,17 +60,3 @@
 </template>
 
 
-<script>
-  export default {
-    computed: {
-      drawerLocation() {
-        return this.$vuetify.display.xs ? 'bottom' : 'left';
-      },
-    },
-
-    data: () => ({
-      drawer: false,
-    }),
-
-  };
-</script>

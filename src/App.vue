@@ -16,7 +16,7 @@
 <template>
   <main>
 
-    <v-app>
+    <v-app style="font-family: 'Nunito', cursive; ">
       <NavBar />
       <MainContent/>
     </v-app>

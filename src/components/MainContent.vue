@@ -1,13 +1,18 @@
 <script>
-
-
   import MonthTimeLine from "./MonthTimeLine.vue";
 
   export default {
-    name: 'App', // Optional: Name der Root-Komponente
+    name: 'App',
 
     components: {
       MonthTimeLine
+    },
+
+    computed: {
+      getYearToDisplay() {
+        const date = new Date(); //https://www.w3schools.com/jsref/jsref_getmonth.asp
+        return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear;
+      },
     },
 
     data: () => ({
@@ -42,7 +47,7 @@
         <v-img
             src="https://cdn.pixabay.com/photo/2014/11/21/03/26/neist-point-540119_1280.jpg"
             max-height="350"
-            cover="true"
+            cover
         >
           <v-row class="fill-height" align="center" justify="center" >
             <v-col md="5" sm="7" xs="11" class="rounded-lg" style="background-color: rgba(255,255,255, 0.25);">
@@ -57,13 +62,15 @@
       </v-row>
 
       <v-row justify="center" >
-        <v-col  md="6" sm="8" xs="10" >
-          <h2 align="center">Das sind die Feiertage für das Jahr 2024</h2>
+        <v-col  md="3" sm="4" xs="7" >
+          <h2 align="center">Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2>
           <v-select
               :items="items"
               model-value="Baden-Württemberg"
               density="comfortable"
+              variant="outlined"
               label="Bundesland"
+              class="my-6"
           />
         </v-col>
       </v-row>
