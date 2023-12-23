@@ -10,7 +10,7 @@
       NavBar,
       MainContent
     },
-}
+  }
 </script>
 
 <template>
