@@ -1,14 +1,17 @@
-
 <template>
-
-  <v-app-bar>
+  <v-app-bar
+      absolute="true"
+      color="transparent"
+      shrink-on-scroll
+      dense
+      app
+  >
     <!-- Hamburger menu icon -->
     <v-app-bar-nav-icon @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown">
       <v-icon>mdi-menu</v-icon>
     </v-app-bar-nav-icon>
 
-    <!-- Spacer to center items -->
-    <v-spacer></v-spacer>
+    <v-app-bar-title>FreiTagPlaner</v-app-bar-title>
 
     <!-- Navigation Items -->
     <v-btn v-if="$vuetify.display.mdAndUp">Home</v-btn>
@@ -24,36 +27,35 @@
       temporary="true"
       v-if="$vuetify.display.smAndDown"
   >
-    <v-list
-        :items="items"
-    ></v-list>
+    <v-list density="compact" nav="true">
+      <v-list-item
+          prepend-icon="mdi-home"
+          title="Home"
+          value="Home"
+      />
+
+      <v-list-item
+          prepend-icon="mdi-calendar-clock"
+          title="Urlaub berechnen"
+          value="calc-vacation"
+      />
+    </v-list>
   </v-navigation-drawer>
 
 </template>
 
 
 <script>
-export default {
-  computed: {
-    drawerLocation() {
-      return this.$vuetify.display.xs ? 'bottom' : 'left';
+  export default {
+    computed: {
+      drawerLocation() {
+        return this.$vuetify.display.xs ? 'bottom' : 'left';
+      },
     },
 
-  },
+    data: () => ({
+      drawer: false,
+    }),
 
-  data: () => ({
-    drawer: false,
-    items: [
-      {
-        title: 'Home',
-        value: 'Home',
-      },
-      {
-        title: 'Urlaub berechnen',
-        value: 'Urlaub berechnen',
-      },
-    ],
-  }),
-
-};
+  };
 </script>
