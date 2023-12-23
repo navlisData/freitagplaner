@@ -1,14 +1,12 @@
 
 <script>
   import NavBar from './components/NavBar.vue'
-  import MainContent from './components/MainContent.vue'
 
   export default {
-    name: 'App', // Optional: Name der Root-Komponente
+    name: 'App',
 
     components: {
       NavBar,
-      MainContent
     },
   }
 </script>
@@ -18,10 +16,27 @@
 
     <v-app style="font-family: 'Nunito', cursive; ">
       <NavBar />
-      <MainContent/>
+      <transition name="fade">
+        <router-view/>
+      </transition>
     </v-app>
 
 
   </main>
 </template>
 
+<style>
+  .active {
+    color: red;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.5s ease;
+  }
+
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+</style>

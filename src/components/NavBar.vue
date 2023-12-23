@@ -15,7 +15,7 @@ export default {
 
 <template>
   <v-app-bar
-      absolute=""
+      absolute
       color="transparent"
       shrink-on-scroll
       dense
@@ -28,9 +28,13 @@ export default {
 
     <v-app-bar-title>FreiTagPlaner</v-app-bar-title>
 
-    <!-- Navigation Items -->
-    <v-btn v-if="$vuetify.display.mdAndUp">Home</v-btn>
-    <v-btn v-if="$vuetify.display.mdAndUp">Urlaub berechnen</v-btn>
+    <v-btn v-if="$vuetify.display.mdAndUp">
+      <router-link class="router-link" to="/">Home</router-link>
+    </v-btn>
+
+    <v-btn class="nav-btn" v-if="$vuetify.display.mdAndUp">
+      <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>
+    </v-btn>
 
     <!-- Spacer to center items -->
     <v-spacer></v-spacer>
@@ -45,18 +49,25 @@ export default {
     <v-list density="compact" nav>
       <v-list-item
           prepend-icon="mdi-home"
-          title="Home"
           value="Home"
-      />
+      >
+        <router-link class="router-link" to="/">Home</router-link>
+      </v-list-item>
 
       <v-list-item
           prepend-icon="mdi-calendar-clock"
-          title="Urlaub berechnen"
           value="calc-vacation"
-      />
+      >
+        <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>
+      </v-list-item>
     </v-list>
   </v-navigation-drawer>
 
 </template>
 
+<style>
+  .router-link {
+    text-decoration: none;
+  }
+</style>
 
