@@ -1,9 +1,15 @@
 <script>
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
+import {de} from "vuetify/locale";
 
 export default {
   name: "Calculator",
+  computed: {
+    de() {
+      return de
+    }
+  },
   components: {
     ImageHeader,
     FederalStateSelect
@@ -44,7 +50,10 @@ export default {
     ],
 
     //Max. vacation days
-    sliderValues: [3, 7]
+    sliderValues: [3, 7],
+
+    //Show details
+    detailsVisible: false
   }),
 
   created() { //As soon component is created, set values
@@ -133,14 +142,14 @@ export default {
               />
             </div>
 
-            <div class="flex-row d-flex ga-4">
+            <div class="flex-row d-flex ga-4 mt-3" v-if="detailsVisible">
               <v-select
                   v-model="selectedMonths"
                   :model-value="selectedMonths"
                   :items="monthList"
                   label="Ausgewählte Monate"
                   multiple
-                  hint="Wähle alle zuberücksichtigten Monate aus"
+                  hint="Wähle alle zu berücksichtigten Monate aus"
                   persistent-hint
                   variant="outlined"
               >
@@ -162,6 +171,7 @@ export default {
                   step="1"
                   :min="1"
                   :max="days"
+                  strict
                   thumb-label="always"
               ></v-range-slider>
 
@@ -174,6 +184,8 @@ export default {
                 class="mt-2"
                 text="Submit"
             >Berechnen</v-btn>
+
+            <span class="d-flex justify-center" style="cursor: pointer" @click.stop="detailsVisible = !detailsVisible">Details {{detailsVisible ? "ausblenden" : "einblenden"}}</span>
           </v-form>
 <!--        </v-sheet>-->
 
