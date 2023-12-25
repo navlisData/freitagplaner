@@ -15,7 +15,7 @@ export default {
   computed: {
     getYearToDisplay() {
       const date = new Date(); //https://www.w3schools.com/jsref/jsref_getmonth.asp
-      return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear;
+      return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
   },
 
@@ -58,14 +58,6 @@ export default {
         <v-col  md="3" sm="7" xs="10" >
           <h2 align="center">Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2>
           <FederalStateSelect class="my-6"/>
-          <!--          <v-select-->
-<!--              :items="items"-->
-<!--              model-value="Baden-Württemberg"-->
-<!--              density="comfortable"-->
-<!--              variant="outlined"-->
-<!--              label="Bundesland"-->
-<!--              class="my-6"-->
-<!--          />-->
         </v-col>
       </v-row>
 
