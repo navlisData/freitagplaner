@@ -16,7 +16,7 @@ export default {
   },
   data: vm => ({
     loading: false,
-    rules: [value => vm.checkApi(value)],
+    // rules: [value => vm.checkApi(value)],
     timeout: null,
 
     //Day field
@@ -29,7 +29,7 @@ export default {
     ],
 
     //State select
-    stateSelect: '', //TODO: Use state used on the landingpage
+    selectedStateAbbrv: null, //TODO: Use state used on the landingpage
     stateSelectRules: [
       value => {
         if (value) return true
@@ -111,84 +111,99 @@ export default {
       </template>
     </ImageHeader>
 
-    <v-row justify="center">
-      <v-col  md="4" sm="7" xs="10" >
-
-<!--        <v-sheet  class="mx-auto">-->
+    <v-row justify="center" class="d-flex">
+      <v-col md="4" sm="7" xs="10">
+        <h2 align="center">Berechne jetzt Deinen Urlaub!</h2>
           <v-form fast-fail validate-on="submit lazy" @submit.prevent="submit">
-
-            <div class="flex-row d-flex ga-4">
+            <!-- Basic configuration row -->
+            <div class="d-flex flex-row ga-4">
               <FederalStateSelect
-                  v-model="stateSelect"
+                  v-model="selectedStateAbbrv"
                   :rules="stateSelectRules"
-                  style="flex: 1 1 100%; min-height: 55px"
+                  style="flex: 1 1 60%; min-height: 55px"
               />
 
-              <v-text-field
-                  v-model="days"
-                  label="Urlaubstage"
-                  :rules="daysRule"
-                  variant="outlined"
-                  style="flex: 1 0 120px; min-height: 55px"
-              ></v-text-field>
+              <div class="d-flex ga-4" style="flex: 1 1 40%">
+                <v-text-field
+                    v-model="days"
+                    label="Urlaubstage"
+                    :rules="daysRule"
+                    variant="outlined"
+                    style="flex: 1 0 120px; min-height: 55px"
+                ></v-text-field>
 
-              <v-select
-                  :items="years"
-                  :model-value="selectedYear"
-                  density="comfortable"
-                  variant="outlined"
-                  label="Jahr"
-                  style="flex: 1 0 120px; min-height: 55px"
-              />
+                <v-select
+                    :items="years"
+                    :model-value="selectedYear"
+                    density="comfortable"
+                    variant="outlined"
+                    label="Jahr"
+                    style="flex: 1 0 120px; min-height: 55px"
+                />
+              </div>
             </div>
 
-            <div class="flex-row d-flex ga-4 mt-3" v-if="detailsVisible">
-              <v-select
-                  v-model="selectedMonths"
-                  :model-value="selectedMonths"
-                  :items="monthList"
-                  label="Ausgewählte Monate"
-                  multiple
-                  hint="Wähle alle zu berücksichtigten Monate aus"
-                  persistent-hint
-                  variant="outlined"
-              >
-                <template v-slot:selection="{ item, index }">
-                  <v-chip v-if="index < 3">
-                    <span>{{ item.title }}</span>
-                  </v-chip>
-                  <span
-                      v-if="index === 3"
-                      class="text-grey text-caption align-self-center"
-                  >
+            <!-- Detailed configuration row -->
+            <div v-if="detailsVisible">
+              <span>Erweiterte Einstellungen</span>
+              <div class="flex-row d-flex ga-4 my-3" >
+                <v-select
+                    style="flex: 1 1 60%"
+                    v-model="selectedMonths"
+                    :model-value="selectedMonths"
+                    :items="monthList"
+                    label="Ausgewählte Monate"
+                    multiple
+                    hint="Wähle alle zu berücksichtigten Monate aus"
+                    persistent-hint
+                    variant="outlined"
+                >
+                  <template v-slot:selection="{ item, index }">
+                    <v-chip v-if="index < 3">
+                      <span>{{ item.title }}</span>
+                    </v-chip>
+                    <span
+                        v-if="index === 3"
+                        class="text-grey text-caption align-self-center"
+                    >
                     (+{{ selectedMonths.length - 3 }} weitere)
                   </span>
-                </template>
-              </v-select>
+                  </template>
+                </v-select>
 
-              <v-range-slider
-                  v-model="sliderValues"
-                  step="1"
-                  :min="1"
-                  :max="days"
-                  strict
-                  thumb-label="always"
-              ></v-range-slider>
+                <div style="flex: 1 1 40%">
+                  <v-range-slider
+                      v-model="sliderValues"
+                      step="1"
+                      :min="1"
+                      :max="days"
+                      strict
+                      thumb-label="always"
+                  ></v-range-slider>
+                </div>
 
+              </div>
             </div>
 
             <v-btn
                 :loading="loading"
                 type="submit"
-                block
-                class="mt-2"
-                text="Submit"
+                class="d-flex mx-auto text-none"
+                color="#4f545c"
+                prepend-icon="mdi-cogs"
+                variant="flat"
             >Berechnen</v-btn>
 
-            <span class="d-flex justify-center" style="cursor: pointer" @click.stop="detailsVisible = !detailsVisible">Details {{detailsVisible ? "ausblenden" : "einblenden"}}</span>
-          </v-form>
-<!--        </v-sheet>-->
+            <v-btn
+                class="d-flex mx-auto text-none"
+                :ripple="false"
+                density="comfortable"
+                :prepend-icon="detailsVisible ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                variant="plain"
+                @click="detailsVisible = !detailsVisible"
+            >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
 
+          </v-form>
 
       </v-col>
     </v-row>
