@@ -18,28 +18,6 @@ export default {
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
   },
-
-  data: () => ({
-    items: [
-      'Baden-Württemberg',
-      'Bayern',
-      'Berlin',
-      'Brandenburg',
-      'Bremen',
-      'Hamburg',
-      'Hessen',
-      'Mecklenburg-Vorpommern',
-      'Niedersachsen',
-      'Nordrhein-Westfalen',
-      'Rheinland-Pfalz',
-      'Saarland',
-      'Sachsen',
-      'Sachsen-Anhalt',
-      'Schleswig-Holstein',
-      'Thüringen'
-    ],
-
-  }),
 }
 </script>
 
@@ -57,7 +35,10 @@ export default {
       <v-row justify="center" >
         <v-col  md="3" sm="7" xs="10" >
           <h2 align="center">Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2>
-          <FederalStateSelect class="my-6"/>
+          <FederalStateSelect
+
+              class="my-6"
+          />
         </v-col>
       </v-row>
 

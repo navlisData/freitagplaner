@@ -1,6 +1,6 @@
 <script>
   export default {
-    // Definieren der Props
+
     props: {
       month: {
         type: String,

@@ -5,15 +5,11 @@ import {de} from "vuetify/locale";
 
 export default {
   name: "Calculator",
-  computed: {
-    de() {
-      return de
-    }
-  },
   components: {
     ImageHeader,
     FederalStateSelect
   },
+
   data: vm => ({
     loading: false,
     // rules: [value => vm.checkApi(value)],
@@ -29,7 +25,7 @@ export default {
     ],
 
     //State select
-    selectedStateAbbrv: null, //TODO: Use state used on the landingpage
+    // selectedState: 'Baden-Württemberg', //InitValue (TODO: pass the state of the landingpage for ux)
     stateSelectRules: [
       value => {
         if (value) return true
@@ -39,8 +35,8 @@ export default {
     ],
 
     //Year select
-    selectedYear: null, //init with null value
-    years: [], //and empty array
+    selectedYear: null, //init value set in created()
+    years: [], //values set in created()
 
     //Exlude-Month-Select
     selectedMonths: ['März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September'],
@@ -118,7 +114,6 @@ export default {
             <!-- Basic configuration row -->
             <div class="d-flex flex-row ga-4">
               <FederalStateSelect
-                  v-model="selectedStateAbbrv"
                   :rules="stateSelectRules"
                   style="flex: 1 1 60%; min-height: 55px"
               />
@@ -134,7 +129,7 @@ export default {
 
                 <v-select
                     :items="years"
-                    :model-value="selectedYear"
+                    v-model="selectedYear"
                     density="comfortable"
                     variant="outlined"
                     label="Jahr"
@@ -150,7 +145,6 @@ export default {
                 <v-select
                     style="flex: 1 1 60%"
                     v-model="selectedMonths"
-                    :model-value="selectedMonths"
                     :items="monthList"
                     label="Ausgewählte Monate"
                     multiple
