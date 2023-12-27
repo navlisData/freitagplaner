@@ -14,9 +14,21 @@ export default {
     FederalStateSelect
   },
 
+  data() {
+    return {
+      holidayData: {}
+    }
+  },
+
   methods: {
-    displayApiJson(stateAbbrv) {
-      console.log(dataFetch.fetchApi(this.getYearToDisplay, stateAbbrv));
+    async fetchJson(stateAbbrv) {
+      try {
+        this.holidayData = await dataFetch.fetchApi(this.getYearToDisplay, stateAbbrv);
+        console.log("data fetched")
+        // this.holidayData = data; // Speichern der Daten im Elternkomponenten
+      } catch (error) {
+        console.error("Failed to fetch holidays:", error);
+      }
     }
   },
 
@@ -45,14 +57,14 @@ export default {
           <h2 align="center">Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2>
           <FederalStateSelect
               class="my-6"
-              @update:value="displayApiJson($event)"
+              @update:value="fetchJson($event)"
           />
         </v-col>
       </v-row>
 
       <v-row justify="center" >
         <v-col  md="8" sm="10" xs="11" >
-          <MonthTimeLine/>
+          <MonthTimeLine :holidays="holidayData"/>
         </v-col>
       </v-row>
 

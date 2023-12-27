@@ -2,20 +2,20 @@ export const dataFetch = {
     async fetchApi(year, state) {
         const apiUrl = 'http://localhost:8081/holidays?year=' + year + '&country=' + state;
         console.log("Api Url: ", apiUrl);
-        fetch(apiUrl)
-            .then(response => {
-                if(response.ok) {
-                    return response.json();
-                }
-                throw new Error('Network response failed');
-            })
-            .then(data => {
-                logJson(data)
+        try {
+            const response = await fetch(apiUrl);
+            if(response.ok) {
+                const data = await response.json();
+                logJson(data); 
                 console.log(data);
-            })
-            .catch(ex => {
-                console.error('Error occured while fetch operation: ', ex);
-            });
+                return data; 
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        } catch (ex) {
+            console.error('Error occurred while fetch operation: ', ex);
+            throw ex;
+        }
     }
 };
 
