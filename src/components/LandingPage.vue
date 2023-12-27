@@ -1,4 +1,6 @@
 <script>
+import { dataFetch } from '@/data-fetch.js';
+
 import MonthTimeLine from "./landingpage/MonthTimeLine.vue";
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
@@ -10,6 +12,12 @@ export default {
     ImageHeader,
     MonthTimeLine,
     FederalStateSelect
+  },
+
+  methods: {
+    displayApiJson(stateAbbrv) {
+      console.log(dataFetch.fetchApi(this.getYearToDisplay, stateAbbrv));
+    }
   },
 
   computed: {
@@ -36,8 +44,8 @@ export default {
         <v-col  md="3" sm="7" xs="10" >
           <h2 align="center">Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2>
           <FederalStateSelect
-
               class="my-6"
+              @update:value="displayApiJson($event)"
           />
         </v-col>
       </v-row>

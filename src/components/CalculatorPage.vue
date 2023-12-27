@@ -2,10 +2,14 @@
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
 import {de} from "vuetify/locale";
+import HolidayCard from "@/components/calculator/VacationCard.vue";
+import VacationCard from "@/components/calculator/VacationCard.vue";
 
 export default {
   name: "Calculator",
   components: {
+    VacationCard,
+    HolidayCard,
     ImageHeader,
     FederalStateSelect
   },
@@ -94,6 +98,26 @@ export default {
     getInitYear() {
       const date = new Date();
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
+    },
+
+    getDummyHolidayArray(count) {
+      let holidayArray = [];
+      for(let i = 0; i < count; i++) {
+        holidayArray.push(new Date())
+      }
+      return holidayArray;
+    },
+
+    getDummyDateRange() {
+      var currentDate = new Date();
+      var newDate = new Date(currentDate);
+
+      newDate.setDate(currentDate.getDate() + 8);
+
+      console.log("Current date: ", currentDate);
+      console.log("Added date: ", newDate);
+
+      return [currentDate, newDate];
     }
   },
 }
@@ -199,6 +223,12 @@ export default {
 
           </v-form>
 
+      </v-col>
+    </v-row>
+
+    <v-row>
+      <v-col>
+        <VacationCard :holiday-days="getDummyHolidayArray(3)" :date-range="getDummyDateRange()"/>
       </v-col>
     </v-row>
 
