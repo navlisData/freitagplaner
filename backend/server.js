@@ -8,6 +8,13 @@ const port = 8081;
 // Use axios for API requests
 const axios = require('axios');
 
+// Require cors module
+const cors = require('cors');
+
+// Enable All CORS Requests for development, or configure as needed
+server.use(cors());
+
+
 /* 
 Get the data from the holidays api
 Parameters: year - the year; country - the country code e.g. BW, BY, ...

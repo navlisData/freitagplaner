@@ -1,7 +1,6 @@
 export const dataFetch = {
     async fetchApi(year, state) {
         const apiUrl = 'http://localhost:8081/holidays?year=' + year + '&country=' + state;
-        // const apiUrl = 'https://feiertage-api.de/api/?jahr='+year+'&nur_land='+state;
         console.log("Api Url: ", apiUrl);
         fetch(apiUrl)
             .then(response => {
@@ -11,6 +10,7 @@ export const dataFetch = {
                 throw new Error('Network response failed');
             })
             .then(data => {
+                logJson(data)
                 console.log(data);
             })
             .catch(ex => {
@@ -18,3 +18,17 @@ export const dataFetch = {
             });
     }
 };
+
+
+
+function logJson(jsonData) {
+    // Iterate over each key in the object
+    Object.keys(jsonData).forEach(holidayName => {
+        const holiday = jsonData[holidayName];
+        console.log("HolidayName: " + holidayName);
+        console.log("Datum: " + holiday.datum);
+        if(holiday.hinweis != "") {
+            console.log("Hinweis: " + holiday.hinweis);
+        }
+    });
+}
