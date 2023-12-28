@@ -4,6 +4,8 @@ import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
 import {de} from "vuetify/locale";
 import HolidayCard from "@/components/calculator/VacationCard.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
+import {dataFetch} from "@/data-fetch.js";
+import {cache} from "@/cache.js";
 
 export default {
   name: "Calculator",
@@ -14,76 +16,87 @@ export default {
     FederalStateSelect
   },
 
-  data: vm => ({
-    loading: false,
-    // rules: [value => vm.checkApi(value)],
-    timeout: null,
+  data() {
+    return {
+      formValidated: null,
+      loading: false,
+      // rules: [value => vm.checkApi(value)],
+      timeout: null,
 
-    //Day field
-    days: '30',
-    daysRule: [
-      value => {
-        if (/^[0-9]+$/.test(value)) return true;
-        return 'Input has to be a number';
-      },
-    ],
+      //Day field
+      days: '30',
+      daysRule: [
+        value => {
+          if (value === '' || value == null) return 'Field cannot be empty';
+          if (/^[0-9]+$/.test(value)) return true;
+          return 'Input has to be a number';
+        },
+      ],
 
-    //State select
-    // selectedState: 'Baden-Württemberg', //InitValue (TODO: pass the state of the landingpage for ux)
-    stateSelectRules: [
-      value => {
-        if (value) return true
+      //State select
+      stateSelectRules: [
+        value => {
+          if (value) return true
+          return 'Please select your federal state'
+        },
+      ],
 
-        return 'Please select your federal state'
-      },
-    ],
+      //Year select
+      selectedYear: null, //init value set in created()
+      years: [], //values set in created()
 
-    //Year select
-    selectedYear: null, //init value set in created()
-    years: [], //values set in created()
+      //Exlude-Month-Select
+      selectedMonths: [2,3,4,5,6,7,8],
+      monthList: [
+        {title: 'Januar', id: 0},
+        {title: 'Februar', id: 1},
+        {title: 'März', id: 2},
+        {title: 'April', id: 3},
+        {title: 'Mai', id: 4},
+        {title: 'Juni', id: 5},
+        {title: 'Juli', id: 6},
+        {title: 'August', id: 7},
+        {title: 'September', id: 8},
+        {title: 'Oktober', id: 9},
+        {title: 'November', id: 10},
+        {title: 'Dezember', id: 11},
+      ],
+      monthSelectRule: [
+        value => {
+          if(Array.isArray(value) && value.length > 0) return true
+          return 'Select at least one month'
+        }
+      ],
 
-    //Exlude-Month-Select
-    selectedMonths: ['März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September'],
-    monthList: [
-      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
-    ],
+      //Max. vacation days
+      sliderValues: [3, 7],
 
-    //Max. vacation days
-    sliderValues: [3, 7],
-
-    //Show details
-    detailsVisible: false
-  }),
+      //Show details
+      detailsVisible: false
+    }
+  },
 
   created() { //As soon component is created, set values
     this.selectedYear = this.getInitYear();
     this.years = this.calculateYears();
   },
 
-  //https://vuetifyjs.com/en/components/forms/#rules
   methods: {
-    async submit (event) {
-      this.loading = true
+    async submit() {
+      this.loading = true;
 
-      const results = await event
+      if(this.formValidated !== null) {
+        if (this.formValidated) {
+          console.log("submitted");
+          const apiData = await dataFetch.fetchApi(this.selectedYear, cache.state.selectedState);
+          console.log("Removed excluded months: ", dataFetch.removeExcludedMonths(apiData, this.selectedMonths))
+        } else {
+          console.log("Form has errors!");
+          //TODO: Show snackbar with error message
+        }
+      }
 
-      this.loading = false
-
-      alert(JSON.stringify(results, null, 2))
-    },
-
-    async checkApi (userName) {
-      return new Promise(resolve => {
-        clearTimeout(this.timeout)
-
-        this.timeout = setTimeout(() => {
-          if (!userName) return resolve('Please enter a user name.')
-          if (userName === 'johnleider') return resolve('User name already taken. Please try another one.')
-
-          return resolve(true)
-        }, 1000)
-      })
+      this.loading = false;
     },
 
     calculateYears() {
@@ -134,7 +147,7 @@ export default {
     <v-row justify="center" class="d-flex">
       <v-col md="4" sm="7" xs="10">
         <h2 align="center">Berechne jetzt Deinen Urlaub!</h2>
-          <v-form fast-fail validate-on="submit lazy" @submit.prevent="submit">
+          <v-form fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
             <!-- Basic configuration row -->
             <div class="d-flex flex-row ga-4">
               <FederalStateSelect
@@ -152,8 +165,8 @@ export default {
                 ></v-text-field>
 
                 <v-select
-                    :items="years"
                     v-model="selectedYear"
+                    :items="years"
                     density="comfortable"
                     variant="outlined"
                     label="Jahr"
@@ -167,22 +180,25 @@ export default {
               <span>Erweiterte Einstellungen</span>
               <div class="flex-row d-flex ga-4 my-3" >
                 <v-select
-                    style="flex: 1 1 60%"
                     v-model="selectedMonths"
                     :items="monthList"
+                    item-title="title"
+                    item-value="id"
+                    :rules="monthSelectRule"
                     label="Ausgewählte Monate"
                     multiple
                     hint="Wähle alle zu berücksichtigten Monate aus"
                     persistent-hint
                     variant="outlined"
+                    style="flex: 1 1 60%"
                 >
                   <template v-slot:selection="{ item, index }">
                     <v-chip v-if="index < 3">
                       <span>{{ item.title }}</span>
                     </v-chip>
                     <span
-                        v-if="index === 3"
-                        class="text-grey text-caption align-self-center"
+                      v-if="index === 3"
+                      class="text-grey text-caption align-self-center"
                     >
                     (+{{ selectedMonths.length - 3 }} weitere)
                   </span>

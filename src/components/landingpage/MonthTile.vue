@@ -32,18 +32,24 @@
 </script>
 
 <template>
-  <v-card width="100%">
-    <v-card-title :class="['text-h6', `bg-red`]">
-      {{ name }}
-    </v-card-title>
-    <v-card-text class="bg-white text--primary">
-      <p>{{formatDate}}</p>
+  <v-card>
+    <v-card-title class="bg-red">
+      <span class="text-subtitle-1 d-flex ga-2 align-center">
+        {{ name }}
+        <v-icon size="small" icon="mdi-information-slab-circle-outline" v-if="notes !== ''"/>
+      </span>
+
       <v-tooltip
           v-if="notes != ''"
           activator="parent"
           location="top"
       >{{ notes }}</v-tooltip>
-      <v-icon icon="mdi-information-slab-circle-outline" v-if="notes != ''"/>
+    </v-card-title>
+    <v-card-text class="bg-white text--primary">
+      <span class="text-subtitle-1 d-flex ga-2 align-center">
+        <v-icon size="x-small" icon="mdi-calendar-today"/>
+        {{formatDate}}
+      </span>
     </v-card-text>
   </v-card>
 </template>

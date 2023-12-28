@@ -1,5 +1,6 @@
 <script>
 import { dataFetch } from '@/data-fetch.js';
+import { cache } from '@/cache.js';
 
 import MonthTimeLine from "./landingpage/MonthTimeLine.vue";
 import ImageHeader from "@/components/global/ImageHeader.vue";
@@ -16,8 +17,12 @@ export default {
 
   data() {
     return {
-      holidayData: {}
+      holidayData: null,
     }
+  },
+
+  mounted() {
+    this.fetchJson(cache.state.selectedState); //for initialisation
   },
 
   methods: {
@@ -25,7 +30,6 @@ export default {
       try {
         this.holidayData = await dataFetch.fetchApi(this.getYearToDisplay, stateAbbrv);
         console.log("data fetched")
-        // this.holidayData = data; // Speichern der Daten im Elternkomponenten
       } catch (error) {
         console.error("Failed to fetch holidays:", error);
       }
@@ -34,7 +38,7 @@ export default {
 
   computed: {
     getYearToDisplay() {
-      const date = new Date(); //https://www.w3schools.com/jsref/jsref_getmonth.asp
+      const date = new Date();
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
   },

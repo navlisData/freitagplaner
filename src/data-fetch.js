@@ -6,8 +6,7 @@ export const dataFetch = {
             const response = await fetch(apiUrl);
             if(response.ok) {
                 const data = await response.json();
-                logJson(data); 
-                console.log(data);
+                // logJson(data);
                 return data; 
             } else {
                 throw new Error('Network response was not ok.');
@@ -16,7 +15,19 @@ export const dataFetch = {
             console.error('Error occurred while fetch operation: ', ex);
             throw ex;
         }
-    }
+    },
+
+    removeExcludedMonths(jsonData, monthArray) {
+        let filteredHolidays = {};
+        Object.keys(jsonData).forEach(holidayName => {
+            const holiday = jsonData[holidayName];
+            const month = new Date(holiday.datum).getMonth();
+            if (monthArray.includes(month)) {
+                filteredHolidays[holidayName] = holiday;
+            }
+        });
+        return filteredHolidays;
+    },
 };
 
 
@@ -27,7 +38,7 @@ function logJson(jsonData) {
         const holiday = jsonData[holidayName];
         console.log("HolidayName: " + holidayName);
         console.log("Datum: " + holiday.datum);
-        if(holiday.hinweis != "") {
+        if(holiday.hinweis !== "") {
             console.log("Hinweis: " + holiday.hinweis);
         }
     });
