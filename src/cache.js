@@ -1,8 +1,6 @@
 export const cache = {
-    state: {
-        selectedState: "BW",
-    },
+    selectedState: 'BW',
     setSelectedState(value) {
-        this.state.selectedState = value;
+        this.selectedState = value;
     },
 };

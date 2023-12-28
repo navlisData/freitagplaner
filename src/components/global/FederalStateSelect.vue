@@ -6,7 +6,7 @@ export default {
 
   data() {
     return {
-      selectedValue: cache.state.selectedState,
+      selectedValue: cache.selectedState,
 
       items: [
         { fullName: 'Baden-Württemberg', abbrv: 'BW' },

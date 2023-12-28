@@ -88,8 +88,18 @@ export default {
       if(this.formValidated !== null) {
         if (this.formValidated) {
           console.log("submitted");
-          const apiData = await dataFetch.fetchApi(this.selectedYear, cache.state.selectedState);
-          console.log("Removed excluded months: ", dataFetch.removeExcludedMonths(apiData, this.selectedMonths))
+
+          const calculateProfile = {
+            yearProf: this.selectedYear,
+            stateProf: cache.selectedState,
+            daysProf: this.days,
+            selectedMonthsProf: this.selectedMonths,
+            minDaysProf: this.sliderValues[0],
+            maxDaysProf: this.sliderValues[1]
+          };
+
+          const tokenOutput = await dataFetch.createTokenResult(calculateProfile);
+          console.log(tokenOutput)
         } else {
           console.log("Form has errors!");
           //TODO: Show snackbar with error message

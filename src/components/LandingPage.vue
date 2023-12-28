@@ -22,7 +22,7 @@ export default {
   },
 
   mounted() {
-    this.fetchJson(cache.state.selectedState); //for initialisation
+    this.fetchJson(cache.selectedState); //for initialisation
   },
 
   methods: {
