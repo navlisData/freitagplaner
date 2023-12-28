@@ -46,7 +46,7 @@ export default {
       years: [], //values set in created()
 
       //Exlude-Month-Select
-      selectedMonths: [2,3,4,5,6,7,8],
+      selectedMonths: [0,1,2,3,4,5,6,7,8,9,10,11],
       monthList: [
         {title: 'Januar', id: 0},
         {title: 'Februar', id: 1},
