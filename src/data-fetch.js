@@ -1,4 +1,9 @@
 import {customRef} from "vue";
+import {tr} from "vuetify/locale";
+
+const WEEKEND = '0 - Wochende';
+const HOLIDAY = '1 - Feiertag';
+const WORKINGDAY = '2 - Arbeitstag';
 
 export const dataFetch = {
     async fetchApi(year, state) {
@@ -21,12 +26,10 @@ export const dataFetch = {
         const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
         const excludedJsonData = removeExcludedMonths(rawApiData, calculatorProfile.selectedMonthsProf);
 
-        let dayArray = [];
-        iterateThroughYear(calculatorProfile.yearProf, excludedJsonData, true, dayArray);
-        iterateThroughYear(calculatorProfile.yearProf, excludedJsonData, false, dayArray);
-        console.log(dayArray)
-
-        console.log(splitIntoPeriods(dayArray));
+        let dayArray = iterateThroughYear(calculatorProfile.yearProf, excludedJsonData);
+        const splittedPeriods = splitIntoPeriods(dayArray);
+        const weightedArray = calculatePeriodScore(splittedPeriods, true);
+        console.log(weightedArray);
     },
 };
 
@@ -38,51 +41,32 @@ function getDayCountByYear(year) {
     return (end - start) / (1000 * 60 * 60 * 24);
 }
 
-
-function iterateThroughYear(year, excludedJsonData, directionForward, dayArray) {
-    let startDate = directionForward ? new Date(year, 0, 1,0,0,0) : new Date(year, 11, 31,0,0,0);
-    let score = 0;
+function iterateThroughYear(year, excludedJsonData) {
+    let dayArray = [];
+    let startDate = new Date(year, 0, 1,0,0,0);
 
     for(let currDay = 0; currDay < getDayCountByYear(year); currDay++) {
         let currentDate = new Date(startDate);
-        currentDate.setDate(directionForward ? (currentDate.getDate()+currDay) : (currentDate.getDate()-currDay));
+        currentDate.setDate(currentDate.getDate()+currDay);
 
-        let weight = 0;
         let daytype = null;
 
         if(currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-            daytype = 'WeekendDay';
-            score = 0;
+            daytype = WEEKEND;
         } else if(matchesHoliday(excludedJsonData, new Date(currentDate))) {
-            daytype = 'HolidayDay';
-            score = 0;
+            daytype = HOLIDAY;
         } else {
-            score++;
-            weight = score;
-            daytype = 'Workingday';
-        }
-
-        if(!directionForward) {
-            let existingDay = dayArray[dayArray.length - currDay -1];
-            if(existingDay) {
-                weight += existingDay.weight;
-            } else {
-                console.error("Existing day not found");
-            }
+            daytype = WORKINGDAY;
         }
 
         let dayEntry = {
             daytype: daytype,
-            date: currentDate,
-            weight: weight
+            date: currentDate
         }
 
-        if(directionForward) {
-            dayArray.push(dayEntry);
-        } else {
-            dayArray[dayArray.length - currDay -1] = dayEntry;
-        }
+        dayArray.push(dayEntry);
     }
+    return dayArray;
 }
 
 function splitIntoPeriods(dayEntries) {
@@ -95,25 +79,24 @@ function splitIntoPeriods(dayEntries) {
 
         //Skipp 1st. Jan, otherwise the first period would be an array-entry with a single day ("Neujahrstag")
         if(i !== 0) {
-            // Check if the current dayEntry has weight = 0
-            // AND the next dayEntry exists and has weight != 0
-            // OR it was the last dayEntry in the array
-            if (entry.weight === 0 &&
-                (i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].weight !== 0))) {
+            // Check if the current dayEntry is a WEEKEND or HOLIDAY day
+            if (entry.daytype !== WORKINGDAY) {
+                // AND it was the last dayEntry in the array
+                // OR the next dayEntry exists and is a WORKINGDAY
+                if(i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].daytype === WORKINGDAY)) {
+                    if(periods.length>0) {
+                        fillWithPreviousDays(periods, currentPeriod)
+                    }
 
-                if(periods.length>0) {
-                    fillWithPreviousDays(periods, currentPeriod)
+                    // save the currentPeriod and start a new one
+                    periods.push(currentPeriod);
+                    currentPeriod = [];
                 }
-
-                // save the currentPeriod and start a new one
-                periods.push(currentPeriod);
-                currentPeriod = [];
             }
         }
-
     }
 
-    // add the last period, even if the last dayEntries-Array doesn't end with a "weight = 0" entry
+    // add the last period, even if the last dayEntries-Array is a WORKINGDAY
     if (currentPeriod.length > 0) {
         if(periods.length>0) {
             fillWithPreviousDays(periods, currentPeriod)
@@ -124,12 +107,42 @@ function splitIntoPeriods(dayEntries) {
     return periods;
 }
 
+function calculatePeriodScore(periodArray, ignoreUsualWeeks) {
+    let weightedPeriods = [];
+    const period = null;
+
+    for(let i = 0; i < periodArray.length; i++) {
+        let workingdays = 0;
+        let nonworkingdays = 0;
+        for(let j = 0; j < periodArray[i].length; j++) {
+            if(periodArray[i][j].daytype === WORKINGDAY) {
+                workingdays++;
+            } else {
+                nonworkingdays++;
+            }
+        }
+
+        //(if its a usual week of 5 workingdays and 4 nonworkingdays AND ignoreUsualWeeks is set) OR calculate for all weeks
+        if(!(workingdays === 5 && nonworkingdays === 4) && ignoreUsualWeeks || (!ignoreUsualWeeks)) {
+            let score = (nonworkingdays/workingdays);
+
+            console.log("Score: ", score);
+            const weightedPeriod = {
+                score: score,
+                period: periodArray[i]
+            }
+            weightedPeriods.push(weightedPeriod);
+        }
+    }
+    return weightedPeriods;
+}
+
 //add non-working days at end of the previous period to the start of the currentPeriod
 function fillWithPreviousDays(periods, currentPeriod) {
     const prevPeriod = periods[periods.length-1];
     for(let i = prevPeriod.length; i > 0; i--) {
         const lastEntryInLastPeriod = prevPeriod[i-1];
-        if(lastEntryInLastPeriod.weight === 0) {
+        if(lastEntryInLastPeriod.daytype !== WORKINGDAY) {
             currentPeriod.unshift(lastEntryInLastPeriod);
         } else {
             return;
