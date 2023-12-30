@@ -18,75 +18,34 @@ export const dataFetch = {
     },
 
     async createTokenResult(calculatorProfile) {
-            const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
-            const excludedJsonData = removeExcludedMonths(rawApiData, calculatorProfile.selectedMonthsProf);
+        const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
+        const excludedJsonData = removeExcludedMonths(rawApiData, calculatorProfile.selectedMonthsProf);
 
+        let dayArray = [];
+        iterateThroughYear(calculatorProfile.yearProf, excludedJsonData, true, dayArray);
+        iterateThroughYear(calculatorProfile.yearProf, excludedJsonData, false, dayArray);
+        console.log(dayArray)
 
-        // Initialisieren Sie eine Map und rufen Sie die Funktion auf
-        let dayMap = new Map();
-        iterateThroughYear(calculatorProfile.yearProf, excludedJsonData, true, dayMap);
-        iterateThroughYear(calculatorProfile.yearProf, excludedJsonData, false, dayMap);
-        console.log(dayMap)
-
-        const output = findMinValueInterval(calculatorProfile.minDaysProf, calculatorProfile.maxDaysProf);
-        console.log(output);
+        console.log(splitIntoPeriods(dayArray));
     },
-
-    // async createTokenResult(calculatorProfile) {
-    //     const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
-    //     const excludedJsonData = removeExcludedMonths(rawApiData, calculatorProfile.selectedMonthsProf);
-    //
-    //     const output = [];
-    //     const reward = 5;
-    //     const weekdayDecrementer = 1;
-    //
-    //     Object.keys(excludedJsonData).forEach(holidayName => {
-    //         const holiday = excludedJsonData[holidayName];
-    //         let startDate = new Date(holiday.datum);
-    //         let endDate = new Date(startDate);
-    //         endDate.setDate(startDate.getDate() + calculatorProfile.maxDaysProf);
-    //
-    //         let tokenCount = 0;
-    //         let weekendDates = [];
-    //         let holidayDates = [];
-    //
-    //         const result = {
-    //             tokenCount,
-    //             weekendDates,
-    //             holidayDates
-    //         }
-    //
-    //         for (let i = new Date(startDate); i <= endDate; i.setDate(i.getDate() + 1)) {
-    //             if(i.getDay() === 0 || i.getDay()===6) {
-    //                 tokenCount+=reward;
-    //                 weekendDates.push(new Date(i));
-    //             } else if(matchesHoliday(excludedJsonData, new Date(i))) {
-    //                 tokenCount+=reward;
-    //                 holidayDates.push(new Date(i));
-    //             } else {
-    //                 tokenCount-=weekdayDecrementer;
-    //             }
-    //         }
-    //
-    //         result.tokenCount = tokenCount;
-    //         result.weekendDates = weekendDates;
-    //         result.holidayDates = holidayDates;
-    //
-    //         output.push(result);
-    //     });
-    //
-    //     return output;
-    // },
 };
 
-function iterateThroughYear(year, excludedJsonData, directionForward, dayMap) {
-    let currentDate = directionForward ? new Date(year, 0, 1) : new Date(year, 11, 31);
-    console.log("Currentdate: ", currentDate)
+function getDayCountByYear(year) {
+    const start = new Date(year, 0, 1);
+    const end = new Date(year + 1, 0, 1);
+
+    // Calculate the difference in milliseconds and convert to days
+    return (end - start) / (1000 * 60 * 60 * 24);
+}
+
+
+function iterateThroughYear(year, excludedJsonData, directionForward, dayArray) {
+    let startDate = directionForward ? new Date(year, 0, 1,0,0,0) : new Date(year, 11, 31,0,0,0);
     let score = 0;
 
-    while (currentDate.getFullYear() === year) {
-
-        console.log("fullYear: ", currentDate.getFullYear() + " and year: ", year)
+    for(let currDay = 0; currDay < getDayCountByYear(year); currDay++) {
+        let currentDate = new Date(startDate);
+        currentDate.setDate(directionForward ? (currentDate.getDate()+currDay) : (currentDate.getDate()-currDay));
 
         let weight = 0;
         let daytype = null;
@@ -103,71 +62,75 @@ function iterateThroughYear(year, excludedJsonData, directionForward, dayMap) {
             daytype = 'Workingday';
         }
 
-        let dateString = currentDate.toISOString().split('T')[0]; // Erstellt einen eindeutigen Schlüssel für das Datum
-        console.log("Key: ",  currentDate.toISOString())
-
         if(!directionForward) {
-            let existingDay = dayMap.get(dateString);
+            let existingDay = dayArray[dayArray.length - currDay -1];
             if(existingDay) {
-                weight += existingDay.weight; // Addieren Sie den weight Wert des ersten Durchlaufs
+                weight += existingDay.weight;
+            } else {
+                console.error("Existing day not found");
             }
         }
 
-        let day = {
-            weight: weight,
+        let dayEntry = {
             daytype: daytype,
-            date: new Date(currentDate) // oder einfach currentDate, wenn keine Modifikationen an currentDate vorgenommen werden
-        };
+            date: currentDate,
+            weight: weight
+        }
 
-        dayMap.set(dateString, day);
-
-        // Datum aktualisieren
         if(directionForward) {
-            currentDate.setDate(currentDate.getDate() + 1);
+            dayArray.push(dayEntry);
         } else {
-            currentDate.setDate(currentDate.getDate() - 1);
+            dayArray[dayArray.length - currDay -1] = dayEntry;
         }
     }
 }
 
-function findMinValueInterval(data, minIntervalLength, maxIntervalLength) {
-    let minSum = Infinity;
-    let minPeriod = null;
+function splitIntoPeriods(dayEntries) {
+    let periods = [];
+    let currentPeriod = [];
 
-    // Konvertiere die Daten in ein Array von [date, value] für leichtere Iteration
-    let dataArray = Array.from(data);
+    for (let i = 0; i < dayEntries.length; i++) {
+        let entry = dayEntries[i];
+        currentPeriod.push(entry);
 
-    // Iteriere durch alle möglichen Intervalllängen
-    for (let intervalLength = minIntervalLength; intervalLength <= maxIntervalLength; intervalLength++) {
-        for (let i = 0; i <= dataArray.length - intervalLength; i++) {
-            let sum = 0;
-            let period = [];
+        // Check if the current dayEntry has weight = 0
+        // AND the next dayEntry exists and has weight != 0
+        // OR it was the last dayEntry in the array
+        if (entry.weight === 0 &&
+            (i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].weight !== 0))) {
 
-            // Summiere Werte für den aktuellen Zeitraum
-            for (let j = 0; j < intervalLength; j++) {
-                sum += dataArray[i + j][1];
-                period.push(dataArray[i + j][0]);
+            if(periods.length>0) {
+                fillWithPreviousDays(periods, currentPeriod)
             }
 
-            // Wenn aktuelle Summe kleiner als minSum, aktualisiere minSum und minPeriod
-            if (sum < minSum) {
-                minSum = sum;
-                minPeriod = period;
-            }
+            // save the currentPeriode and start a new one
+            periods.push(currentPeriod);
+            currentPeriod = [];
         }
     }
 
-    return {
-        minSum,
-        minPeriod
-    };
+    // add the last period, even if the last dayEntries-Array doesn't end with a "weight = 0" entry
+    if (currentPeriod.length > 0) {
+        if(periods.length>0) {
+            fillWithPreviousDays(periods, currentPeriod)
+        }
+        periods.push(currentPeriod);
+    }
+
+    return periods;
 }
 
-
-const DayType = {
-    Workingday: '',
-    HolidayDay: '',
-    WeekendDay: '',
+//add non-working days at end of the previous period to the start of the currentPeriod
+function fillWithPreviousDays(periods, currentPeriod) {
+    const prevPeriod = periods[periods.length-1];
+    for(let i = prevPeriod.length; i > 0; i--) {
+        const lastEntryInLastPeriod = prevPeriod[i-1];
+        if(lastEntryInLastPeriod.weight === 0) {
+            currentPeriod.unshift(lastEntryInLastPeriod);
+        } else {
+            return;
+        }
+    }
 }
 
 function matchesHoliday(jsonData, dateToCheck) {
