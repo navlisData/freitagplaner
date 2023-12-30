@@ -1,5 +1,5 @@
 import {customRef, reactive, toRaw} from "vue";
-import {tr} from "vuetify/locale";
+import {da, tr} from "vuetify/locale";
 
 const WEEKEND = '0 - Wochende';
 const HOLIDAY = '1 - Feiertag';
@@ -52,7 +52,9 @@ function getDayCount(startDate, endDate) {
     const end = new Date(endDate);
 
     // Calculate the difference in milliseconds and convert to days
-    return (end - start) / (1000 * 60 * 60 * 24);
+    let dayCount = (end - start) / (1000 * 60 * 60 * 24);
+    // return dayCount;
+    return dayCount+1; //include the end date as a full day
 }
 
 //Checks on a specific date, if the next or previous days are non-working days > if so, adds them
@@ -61,7 +63,7 @@ function correctDate(rawJsonData, initDate, calculateForward) {
     let dateToCheck = new Date(correctedDate);
     dateToCheck.setDate(correctedDate.getDate() + (calculateForward ? +1 : -1));
 
-    while(dateToCheck.getDay() === 0 || dateToCheck.getDay() === 6 || matchesHoliday(rawJsonData, new Date(dateToCheck)) && (dateToCheck.getFullYear() === initDate.getFullYear())) {
+    while((dateToCheck.getDay() === 0 || dateToCheck.getDay() === 6 || matchesHoliday(rawJsonData, new Date(dateToCheck))) && (dateToCheck.getFullYear() === initDate.getFullYear())) {
         correctedDate = new Date(dateToCheck);
         dateToCheck.setDate(correctedDate.getDate() + (calculateForward ? +1 : -1));
     }
@@ -70,9 +72,9 @@ function correctDate(rawJsonData, initDate, calculateForward) {
 
 function createDayArray(startDate, endDate, excludedJsonData) {
     let dayArray = [];
-    // let startDate = new Date(year, 0, 1,0,0,0);
+    const dayCount = getDayCount(startDate, endDate);
 
-    for(let currDay = 0; currDay < getDayCount(startDate, endDate); currDay++) {
+    for(let currDay = 0; currDay < dayCount; currDay++) {
         let currentDate = new Date(startDate);
         currentDate.setDate(currentDate.getDate()+currDay);
 
@@ -98,16 +100,16 @@ function createDayArray(startDate, endDate, excludedJsonData) {
 function splitIntoPeriods(dayEntries) {
     let periods = [];
     let currentPeriod = [];
+    let alreadyFoundWorkingday = false; //For the case, that dayEntries starts with a non-working day
 
     for (let i = 0; i < dayEntries.length; i++) {
         let entry = dayEntries[i];
         currentPeriod.push(entry);
 
-        //Skipp 1st. Jan, otherwise the first period would be an array-entry with a single day ("Neujahrstag")
-        if (i !== 0 && entry.daytype !== WORKINGDAY) {
+        if (entry.daytype !== WORKINGDAY) {
             // AND it was the last dayEntry in the array
             // OR the next dayEntry exists and is a WORKINGDAY
-            if(i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].daytype === WORKINGDAY)) {
+            if(i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].daytype === WORKINGDAY) && alreadyFoundWorkingday === true){
                 if(periods.length>0) {
                     fillWithPreviousDays(periods, currentPeriod)
                 }
@@ -116,6 +118,8 @@ function splitIntoPeriods(dayEntries) {
                 periods.push(currentPeriod);
                 currentPeriod = [];
             }
+        } else {
+            alreadyFoundWorkingday = true;
         }
     }
 
