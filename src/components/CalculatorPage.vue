@@ -6,6 +6,7 @@ import HolidayCard from "@/components/calculator/VacationCard.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
 import {dataFetch} from "@/data-fetch.js";
 import {cache} from "@/cache.js";
+import {toRaw} from "vue";
 
 export default {
   name: "Calculator",
@@ -46,7 +47,7 @@ export default {
       years: [], //values set in created()
 
       //Exlude-Month-Select
-      selectedMonths: [0,1,2,3,4,5,6,7,8,9,10,11],
+      selectedMonths: [3,4,5,6,7,8,9],
       monthList: [
         {title: 'Januar', id: 0},
         {title: 'Februar', id: 1},
@@ -93,7 +94,7 @@ export default {
             yearProf: this.selectedYear,
             stateProf: cache.selectedState,
             daysProf: this.days,
-            selectedMonthsProf: this.selectedMonths,
+            selectedMonthsProf: toRaw(this.selectedMonths), //Returns the raw, original object of a Vue-created proxy.
             minDaysProf: this.sliderValues[0],
             maxDaysProf: this.sliderValues[1]
           };
