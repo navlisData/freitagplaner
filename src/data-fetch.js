@@ -93,20 +93,24 @@ function splitIntoPeriods(dayEntries) {
         let entry = dayEntries[i];
         currentPeriod.push(entry);
 
-        // Check if the current dayEntry has weight = 0
-        // AND the next dayEntry exists and has weight != 0
-        // OR it was the last dayEntry in the array
-        if (entry.weight === 0 &&
-            (i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].weight !== 0))) {
+        //Skipp 1st. Jan, otherwise the first period would be an array-entry with a single day ("Neujahrstag")
+        if(i !== 0) {
+            // Check if the current dayEntry has weight = 0
+            // AND the next dayEntry exists and has weight != 0
+            // OR it was the last dayEntry in the array
+            if (entry.weight === 0 &&
+                (i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].weight !== 0))) {
 
-            if(periods.length>0) {
-                fillWithPreviousDays(periods, currentPeriod)
+                if(periods.length>0) {
+                    fillWithPreviousDays(periods, currentPeriod)
+                }
+
+                // save the currentPeriod and start a new one
+                periods.push(currentPeriod);
+                currentPeriod = [];
             }
-
-            // save the currentPeriode and start a new one
-            periods.push(currentPeriod);
-            currentPeriod = [];
         }
+
     }
 
     // add the last period, even if the last dayEntries-Array doesn't end with a "weight = 0" entry
