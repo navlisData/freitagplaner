@@ -24,21 +24,20 @@ export const dataFetch = {
 
     async createTokenResult(calculatorProfile) {
         const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
-        const excludedJsonData = removeExcludedMonths(rawApiData, calculatorProfile.selectedMonthsProf);
+        const excludedJsonData = removeExcludedMonths(rawApiData, calculatorProfile.startMonthProf, calculatorProfile.endMonthProf);
 
-        const firstMonthInSelection = Math.min(...calculatorProfile.selectedMonthsProf)
-        const correctedStartdate = correctDate(rawApiData,
-            new Date(calculatorProfile.yearProf, firstMonthInSelection, 1, 0,0,0), false);
-        console.log("Corrected Startdate: ", correctedStartdate)
-        const lastMonthInSelection = Math.max(...calculatorProfile.selectedMonthsProf)
+        let startDate = new Date(calculatorProfile.yearProf, calculatorProfile.startMonthProf, 1, 0,0,0);
+        let endDate = new Date(calculatorProfile.yearProf, calculatorProfile.endMonthProf, getLastDayOfMonth(calculatorProfile.yearProf, calculatorProfile.endMonthProf), 0,0,0);
 
-        const correctedEnddate = correctDate(rawApiData,
-            new Date(calculatorProfile.yearProf, lastMonthInSelection, getLastDayOfMonth(calculatorProfile.yearProf, lastMonthInSelection), 0,0,0), true);
-        console.log("Corrected Enddate: ", correctedEnddate)
+        console.log(calculatorProfile.correctDatesProf);
+        if(calculatorProfile.correctDatesProf) {
+            startDate = new Date(correctDate(rawApiData, startDate, false));
+            endDate = new Date(correctDate(rawApiData, endDate, true));
+        }
 
-        let dayArray = createDayArray(correctedStartdate, correctedEnddate, excludedJsonData);
+        let dayArray = createDayArray(startDate, endDate, excludedJsonData);
         const splittedPeriods = splitIntoPeriods(dayArray);
-        const weightedArray = calculatePeriodScore(splittedPeriods, true);
+        const weightedArray = calculatePeriodScore(splittedPeriods, false);
         console.log(weightedArray);
     },
 };
@@ -186,12 +185,12 @@ function matchesHoliday(jsonData, dateToCheck) {
     return false;
 }
 
-function removeExcludedMonths(jsonData, monthArray) {
+function removeExcludedMonths(jsonData, startMonth, endMonth) {
     let filteredHolidays = {};
     Object.keys(jsonData).forEach(holidayName => {
         const holiday = jsonData[holidayName];
         const month = new Date(holiday.datum).getMonth();
-        if (monthArray.includes(month)) {
+        if (startMonth <= month && endMonth >= month) {
             filteredHolidays[holidayName] = holiday;
         }
     });

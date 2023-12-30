@@ -46,32 +46,33 @@ export default {
       selectedYear: null, //init value set in created()
       years: [], //values set in created()
 
-      //Exlude-Month-Select
-      selectedMonths: [0,1,2,3,4,5,6,7,8,9,10,11],
-      // selectedMonths: [6,7],
-      monthList: [
-        {title: 'Januar', id: 0},
-        {title: 'Februar', id: 1},
-        {title: 'März', id: 2},
-        {title: 'April', id: 3},
-        {title: 'Mai', id: 4},
-        {title: 'Juni', id: 5},
-        {title: 'Juli', id: 6},
-        {title: 'August', id: 7},
-        {title: 'September', id: 8},
-        {title: 'Oktober', id: 9},
-        {title: 'November', id: 10},
-        {title: 'Dezember', id: 11},
+      //Max. vacation days
+      sliderValues: [3, 7],
+
+      //Month selection
+      monthValues: {
+        0: 'Jan', 1: 'Feb', 2: 'Mär',
+        3: 'Apr', 4: 'Mai', 5: 'Jun',
+        6: 'Jul', 7: 'Aug', 8: 'Sep',
+        9: 'Okt', 10: 'Nov', 11: 'Dez',
+      },
+
+      monthFullNames: [
+        'Januar', 'Februar', 'März',
+        'April', 'Mai', 'Juni',
+        'Juli', 'August', 'September',
+        'Oktober', 'November', 'Dezember',
       ],
+      selectedMonths: [3,8],
       monthSelectRule: [
         value => {
-          if(Array.isArray(value) && value.length > 0) return true
-          return 'Select at least one month'
+          if(value[1] > value[0]) return true
+          return 'Select at least two months'
         }
       ],
 
-      //Max. vacation days
-      sliderValues: [3, 7],
+      //Scan next months
+      correctDate: true,
 
       //Show details
       detailsVisible: false
@@ -81,6 +82,20 @@ export default {
   created() { //As soon component is created, set values
     this.selectedYear = this.getInitYear();
     this.years = this.calculateYears();
+  },
+
+  computed: {
+    generateSwitchLabel() {
+      if(this.selectedMonths[0] === 0 && this.selectedMonths[1] !== 11) {
+        return 'Überprüfen, ob Anfang ' + this.monthFullNames[this.selectedMonths[1]+1] + ' noch freie Tage sind';
+      } else if(this.selectedMonths[0] !== 0 && this.selectedMonths[1] === 11) {
+        return 'Überprüfen, ob Ende ' + this.monthFullNames[this.selectedMonths[0]-1] + ' noch freie Tage sind';
+      } else if(this.selectedMonths[0] !== 0 && this.selectedMonths[1] !== 11) {
+        return 'Überprüfen, ob Ende ' + this.monthFullNames[this.selectedMonths[0]-1] + ' und  Anfang ' + this.monthFullNames[this.selectedMonths[1]+1] + ' noch freie Tage sind';
+      } else {
+        return 'test'
+      }
+    },
   },
 
   methods: {
@@ -95,9 +110,11 @@ export default {
             yearProf: this.selectedYear,
             stateProf: cache.selectedState,
             daysProf: this.days,
-            selectedMonthsProf: toRaw(this.selectedMonths), //Returns the raw, original object of a Vue-created proxy.
+            startMonthProf: toRaw(this.selectedMonths[0]), //Returns the raw, original object of a Vue-created proxy.
+            endMonthProf: toRaw(this.selectedMonths[1]), //Returns the raw, original object of a Vue-created proxy.
             minDaysProf: this.sliderValues[0],
-            maxDaysProf: this.sliderValues[1]
+            maxDaysProf: this.sliderValues[1],
+            correctDatesProf: this.correctDate
           };
 
           const tokenOutput = await dataFetch.createTokenResult(calculateProfile);
@@ -124,26 +141,6 @@ export default {
       const date = new Date();
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
-
-    getDummyHolidayArray(count) {
-      let holidayArray = [];
-      for(let i = 0; i < count; i++) {
-        holidayArray.push(new Date())
-      }
-      return holidayArray;
-    },
-
-    getDummyDateRange() {
-      var currentDate = new Date();
-      var newDate = new Date(currentDate);
-
-      newDate.setDate(currentDate.getDate() + 8);
-
-      console.log("Current date: ", currentDate);
-      console.log("Added date: ", newDate);
-
-      return [currentDate, newDate];
-    }
   },
 }
 </script>
@@ -157,7 +154,7 @@ export default {
     </ImageHeader>
 
     <v-row justify="center" class="d-flex">
-      <v-col md="4" sm="7" xs="10">
+      <v-col md="5" sm="7" xs="10">
         <h2 align="center">Berechne jetzt Deinen Urlaub!</h2>
           <v-form fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
             <!-- Basic configuration row -->
@@ -190,45 +187,50 @@ export default {
             <!-- Detailed configuration row -->
             <div v-if="detailsVisible">
               <span>Erweiterte Einstellungen</span>
-              <div class="flex-row d-flex ga-4 my-3" >
-                <v-select
-                    v-model="selectedMonths"
-                    :items="monthList"
-                    item-title="title"
-                    item-value="id"
-                    :rules="monthSelectRule"
-                    label="Ausgewählte Monate"
-                    multiple
-                    hint="Wähle alle zu berücksichtigten Monate aus"
-                    persistent-hint
-                    variant="outlined"
-                    style="flex: 1 1 60%"
-                >
-                  <template v-slot:selection="{ item, index }">
-                    <v-chip v-if="index < 3">
-                      <span>{{ item.title }}</span>
-                    </v-chip>
-                    <span
-                      v-if="index === 3"
-                      class="text-grey text-caption align-self-center"
+                <v-row>
+                  <v-col class="pa-12">
+                    <v-range-slider
+                        v-model="selectedMonths"
+                        :ticks="monthValues"
+                        :rules="monthSelectRule"
+                        min="0"
+                        max="11"
+                        :step="1"
+                        show-ticks="always"
+                        thumb-label="always"
+                        tick-size="4"
+                        strict
                     >
-                    (+{{ selectedMonths.length - 3 }} weitere)
-                  </span>
+                      <template v-slot:thumb-label="{ modelValue }">
+                        <v-icon theme="dark" :icon="modelValue === this.selectedMonths[0] ? 'mdi-chevron-right' : 'mdi-chevron-left'"></v-icon>
+                      </template>
+                    </v-range-slider>
+                  </v-col>
+                </v-row>
+
+              <v-col class="pa-6">
+                <v-range-slider
+                    v-model="sliderValues"
+                    step="1"
+                    :min="1"
+                    :max="days"
+                    strict
+                    thumb-label="always"
+                ></v-range-slider>
+              </v-col>
+
+              <v-col class="pa-2">
+                <v-switch
+                    v-if="!(selectedMonths[0] === 0 && selectedMonths[1] === 11)"
+                    color="primary"
+                    v-model="correctDate"
+                >
+                  <template v-slot:label="">
+                    <span>{{generateSwitchLabel}}</span>
                   </template>
-                </v-select>
+                </v-switch>
+              </v-col>
 
-                <div style="flex: 1 1 40%">
-                  <v-range-slider
-                      v-model="sliderValues"
-                      step="1"
-                      :min="1"
-                      :max="days"
-                      strict
-                      thumb-label="always"
-                  ></v-range-slider>
-                </div>
-
-              </div>
             </div>
 
             <v-btn
@@ -256,7 +258,7 @@ export default {
 
     <v-row>
       <v-col>
-        <VacationCard :holiday-days="getDummyHolidayArray(3)" :date-range="getDummyDateRange()"/>
+<!--        <VacationCard :holiday-days="getDummyHolidayArray(3)" :date-range="getDummyDateRange()"/>-->
       </v-col>
     </v-row>
 
