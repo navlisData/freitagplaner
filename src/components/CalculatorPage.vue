@@ -47,7 +47,7 @@ export default {
       years: [], //values set in created()
 
       //Max. vacation days
-      sliderValues: [3, 7],
+      sliderValues: [3, 21],
 
       //Month selection
       monthValues: {
@@ -92,8 +92,6 @@ export default {
         return 'Überprüfen, ob Ende ' + this.monthFullNames[this.selectedMonths[0]-1] + ' noch freie Tage sind';
       } else if(this.selectedMonths[0] !== 0 && this.selectedMonths[1] !== 11) {
         return 'Überprüfen, ob Ende ' + this.monthFullNames[this.selectedMonths[0]-1] + ' und  Anfang ' + this.monthFullNames[this.selectedMonths[1]+1] + ' noch freie Tage sind';
-      } else {
-        return 'test'
       }
     },
   },
@@ -114,7 +112,7 @@ export default {
             endMonthProf: toRaw(this.selectedMonths[1]), //Returns the raw, original object of a Vue-created proxy.
             minDaysProf: this.sliderValues[0],
             maxDaysProf: this.sliderValues[1],
-            correctDatesProf: this.correctDate
+            correctDatesProf: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
           };
 
           const tokenOutput = await dataFetch.createTokenResult(calculateProfile);
