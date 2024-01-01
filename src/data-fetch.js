@@ -30,27 +30,34 @@ export const dataFetch = {
 
         console.log(calculatorProfile.correctDatesProf);
         if(calculatorProfile.correctDatesProf) {
-            console.log("Start org: ", startDate);
             startDate = new Date(correctDate(rawApiData, startDate, false));
-            console.log("Start corr: ", startDate);
             endDate = new Date(correctDate(rawApiData, endDate, true));
         }
 
         let dayArray = createDayArray(startDate, endDate, excludedJsonData);
         // console.log("Dayarray: ", dayArray)
         const splittedPeriods = splitIntoPeriods(dayArray);
-        console.log("SplittedPeriods: ", splittedPeriods)
-        const scoredPeriods = calculatePeriodScore(splittedPeriods, false);
-        console.log("Scored periods: ", scoredPeriods);
+        // console.log("SplittedPeriods: ", splittedPeriods)
+        const preparedPeriods = preparePeriodScore(splittedPeriods, false);
+        // console.log("Scored periods: ", preparedPeriods);
 
         let bestCombinations = [];
-        for(let i = 0; i < scoredPeriods.length; i++) {
-            const combinationsByIndex = findAllPeriodCombinations(scoredPeriods, i, calculatorProfile.minDaysProf, calculatorProfile.maxDaysProf);
-
+        for(let i = 0; i < preparedPeriods.length; i++) {
+            const combinationsByIndex = findAllPeriodCombinations(preparedPeriods, i, calculatorProfile.minDaysProf, calculatorProfile.maxDaysProf);
+            // console.log(combinationsByIndex);
             let bestScore = 0;
             let bestPeriod = []
             for(let j = 0; j < combinationsByIndex.length; j++) {
-                const score = combinationsByIndex[j].reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+
+                const { totalWorkingDays, totalNonWorkingDays } = combinationsByIndex[j].reduce((acc, index) => {
+                    return {
+                        totalWorkingDays: acc.totalWorkingDays + preparedPeriods[index].workingdays,
+                        totalNonWorkingDays: acc.totalNonWorkingDays + preparedPeriods[index].nonworkingdays
+                    };
+                }, { totalWorkingDays: 0, totalNonWorkingDays: 0 });
+
+                let score = totalNonWorkingDays !== 0 ? totalNonWorkingDays / totalWorkingDays : 0;
+
                 if(score > bestScore) {
                     bestScore = score;
                     bestPeriod = combinationsByIndex[j];
@@ -63,12 +70,12 @@ export const dataFetch = {
             bestCombinations.push(holder)
         }
 
-        console.log("bc: ", bestCombinations)
+        console.log("Sorting descending...");
+        bestCombinations.sort((a, b) => b.score - a.score);
         console.log("Best scored periods are: ");
         for(let i = 0; i < bestCombinations.length; i++) {
-            console.log("Combined Score is: ", bestCombinations[i].score);
             for(let j = 0; j < bestCombinations[i].bestScoredPeriod.length; j++) {
-                console.log(scoredPeriods[bestCombinations[i].bestScoredPeriod[j]])
+                console.log(preparedPeriods[bestCombinations[i].bestScoredPeriod[j]])
             }
         }
     },
@@ -78,20 +85,20 @@ function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) 
     let allCombinations = [];
 
     function backtrack(combination, currentDayCount, index) {
-        // Prüfen, ob die Passagieranzahl das Limit überschreitet
+        // Check if the period has already more days than given
         if (currentDayCount <= maxDays) {
-            // Speichere die gültige Kombination, wenn das Minimum erreicht wurde
+            // save valid combination as soon min-days is reached
             if (currentDayCount >= minDays) {
                 allCombinations.push(combination.slice());
             }
 
-            // Gehe zu den nächsten Waggons in beiden Richtungen
+            // step one index back and forth
             [-1, 1].forEach(direction => {
                 let nextIndex = index + direction;
                 if (nextIndex >= 0 && nextIndex < periods.length && !combination.includes(nextIndex)) {
                     combination.push(nextIndex);
                     backtrack(combination, currentDayCount + cleanPeriodCount(index, nextIndex), nextIndex);
-                    combination.pop(); // Zurücksetzen für den nächsten Durchlauf
+                    combination.pop(); // reset for the next iteration
                 }
             });
         }
@@ -101,9 +108,7 @@ function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) 
         return periods[nextPeriodIndex].period.filter(np => !periods[currPeriodIndex].period.includes(np)).length;
     }
 
-    // Starte den Backtracking-Vorgang
     backtrack([startPeriodIndex], periods[startPeriodIndex].period.length, startPeriodIndex);
-
     return allCombinations;
 }
 
@@ -198,12 +203,13 @@ function splitIntoPeriods(dayEntries) {
     return periods;
 }
 
-function calculatePeriodScore(periodArray, ignoreUsualWeeks) {
+function preparePeriodScore(periodArray, ignoreUsualWeeks) {
     let weightedPeriods = [];
 
     let scoredPeriod = {
         period: [],
-        score: 0
+        workingdays: 0,
+        nonworkingdays: 0
     }
 
     for(let i = 0; i < periodArray.length; i++) {
@@ -217,16 +223,21 @@ function calculatePeriodScore(periodArray, ignoreUsualWeeks) {
             }
         }
 
-        //(if its a usual week of 5 workingdays and 4 nonworkingdays AND ignoreUsualWeeks is set) OR calculate for all weeks
-        if(!(workingdays === 5 && nonworkingdays === 4) && ignoreUsualWeeks || (!ignoreUsualWeeks)) {
-            scoredPeriod.period = periodArray[i];
-            scoredPeriod.score = (nonworkingdays/workingdays);
-            weightedPeriods.push(scoredPeriod);
-            scoredPeriod = {
-                period: [],
-                score: 0
-            }
+        scoredPeriod.period = periodArray[i];
+        scoredPeriod.workingdays = workingdays;
+        scoredPeriod.nonworkingdays = nonworkingdays;
+        weightedPeriods.push(scoredPeriod);
+
+        scoredPeriod = {
+            period: [],
+            workingdays: 0,
+            nonworkingdays: 0
         }
+
+        //(if its a usual week of 5 workingdays and 4 nonworkingdays AND ignoreUsualWeeks is set) OR calculate for all weeks
+        // if(!(workingdays === 5 && nonworkingdays === 4) && ignoreUsualWeeks || (!ignoreUsualWeeks)) {
+        //
+        // }
     }
     return weightedPeriods;
 }
