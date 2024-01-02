@@ -19,7 +19,9 @@ export default {
 
   data() {
     return {
-      optimizedPeriods: null,
+      displayedItems: [],
+      optimizedPeriods: [],
+      loadIndex: 0,
       formValidated: null,
       loading: false,
       // rules: [value => vm.checkApi(value)],
@@ -142,6 +144,17 @@ export default {
       const date = new Date();
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
+
+    load ({ done }) {
+      setTimeout(() => {
+        const remaining = this.optimizedPeriods.length - this.loadIndex;
+        const count = Math.min(5, remaining);
+        const nextItems = this.optimizedPeriods.slice(this.loadIndex, this.loadIndex + count);
+        this.displayedItems = [...this.displayedItems, ...nextItems];
+        this.loadIndex += count;
+        remaining === 0 ? done('empty') : done('ok')
+      }, 200);
+    },
   },
 }
 </script>
@@ -257,11 +270,16 @@ export default {
     </v-row>
 
     <v-row justify="center" class="d-flex">
-      <v-col md="5" sm="7" xs="10">
-        <VacationCard
-            v-for="(periodData, index) in optimizedPeriods"
-            :key="index"
-            :periodData="periodData"/>
+      <v-col md="7" sm="8" xs="10">
+        <v-infinite-scroll v-if="optimizedPeriods.length > 0" class="px-10 " :height="450" :onLoad="load">
+          <template v-for="(periodData, index) in displayedItems" :key="index">
+            <VacationCard :periodData="periodData"/>
+          </template>
+          <template v-slot:empty>
+            <v-alert type="warning">Keine weiteren Vorschläge</v-alert>
+          </template>
+        </v-infinite-scroll>
+
       </v-col>
     </v-row>
 

@@ -61,61 +61,59 @@ export default {
 
 
   <v-hover v-slot="{ isHovering, props }">
-    <v-card
-        class="mx-auto ma-3"
-        color="indigo"
-        variant="outlined"
-        v-bind="props"
-    >
-      <v-card-item>
-        <div>
-          <div class="d-flex flex-row">
-            <div class="text-overline mb-1">
-              {{buildDateRange}}
-            </div>
-
-            <div class="ml-auto">
-              <v-chip
-                  class="ma-2"
-                  color="indigo"
-                  size="small"
-                  prepend-icon="mdi-poll"
-              >
-                {{ parseFloat(toRaw(periodData).score.toFixed(2)) }}
-                <v-tooltip
-                    activator="parent"
-                    location="top"
-                >Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
-                  Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen</v-tooltip>
-              </v-chip>
-            </div>
-          </div>
-
-          <div class="text-h6 mb-1">
-            {{ toRaw(periodData).period.length }} Tage Urlaub
-          </div>
-          <div class="text-caption d-flex flex-column">
-            <span>{{toRaw(periodData).workingdays}} Arbeitstage</span>
-            <span>{{toRaw(periodData).nonworkingdays}} freie Tage</span>
-          </div>
-        </div>
-      </v-card-item>
-
-      <v-overlay
-          :model-value="isHovering"
-          contained
-          scrim="indigo-lighten-5"
-          class="align-center justify-center"
+    <div style="position: relative;"  v-bind="props">
+      <v-card
+          class="mx-auto ma-3"
+          color="indigo"
+          variant="outlined"
+          style="position: relative; z-index: 1;"
       >
-        <v-btn
-          variant="flat"
-          color="indigo-lighten-1"
+        <v-card-item>
+          <div>
+            <div class="d-flex flex-row">
+              <div class="text-overline mb-1">
+                {{buildDateRange}}
+              </div>
+
+              <div class="ml-auto">
+                <v-chip
+                    class="ma-2"
+                    color="indigo"
+                    size="small"
+                    prepend-icon="mdi-poll"
+                >
+                  {{ parseFloat(toRaw(periodData).score.toFixed(2)) }}
+                  <v-tooltip
+                      activator="parent"
+                      location="top"
+                  >Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
+                    Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen</v-tooltip>
+                </v-chip>
+              </div>
+            </div>
+
+            <div class="text-h6 mb-1">
+              {{ toRaw(periodData).period.length }} Tage Urlaub
+            </div>
+            <div class="text-caption d-flex flex-column">
+              <span>{{toRaw(periodData).workingdays}} Arbeitstage</span>
+              <span>{{toRaw(periodData).nonworkingdays}} freie Tage</span>
+            </div>
+          </div>
+        </v-card-item>
+
+      </v-card>
+
+      <v-btn
+          v-if="isHovering"
+          color="indigo-darken-2"
+          density="default"
+          icon="mdi-folder-information"
+          style="position: absolute; right: -25px; top: 80%; transform: translateY(-50%); z-index: 2;"
           @click="dialog = true"
-        >
-          Tage betrachten
-        </v-btn>
-      </v-overlay>
-    </v-card>
+      />
+    </div>
+
   </v-hover>
 </template>
 
