@@ -13,6 +13,7 @@ export default {
   data() {
     return {
       dialog: false,
+      selected: false,
       days: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
     }
   },
@@ -104,6 +105,14 @@ export default {
 
       </v-card>
 
+      <v-btn
+          v-if="isHovering || selected"
+          color="indigo-lighten-1"
+          density="default"
+          :icon="selected ? 'mdi-star' : 'mdi-star-outline'"
+          style="position: absolute; right: -25px; top: 40%; transform: translateY(-50%); z-index: 2;"
+          @click="selected = !selected"
+      />
       <v-btn
           v-if="isHovering"
           color="indigo-darken-2"

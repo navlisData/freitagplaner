@@ -168,23 +168,17 @@ function calculateScoreMedian(bestCombinations) {
     return median;
 }
 
+//with help of CGPT
 function filterByStandardDeviation(bestCombinations) {
-    // Extrahiere Scores aus den besten Kombinationen
+    // Extract scores from the best combinations
     const scores = bestCombinations.map(bestCombination => bestCombination.score);
-
-    // Berechne den Durchschnitt (mean) und die Standardabweichung (stdDev) der Scores
-    const mean = scores.reduce((acc, val) => acc + val, 0) / scores.length;
-    const stdDev = Math.sqrt(
+    const mean = scores.reduce((acc, val) => acc + val, 0) / scores.length; //calc average of score
+    const stdDev = Math.sqrt( //clac standard deviation (stdDev) of score
         scores.map(score => Math.pow(score - mean, 2)).reduce((acc, val) => acc + val, 0) / scores.length
     );
-
-    // Definiere einen Schwellenwert
-    const threshold =  mean - 0.1 * stdDev;
-
-    // Filtere die besten Kombinationen basierend auf dem Schwellenwert
+    const threshold = mean - 0.5 * stdDev;
     return bestCombinations.filter(bestCombination => bestCombination.score > threshold);
 }
-
 
 function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) {
     let allCombinations = [];
@@ -388,16 +382,3 @@ function removeExcludedMonths(jsonData, startMonth, endMonth) {
     });
     return filteredHolidays;
 }
-//
-// function logJson(jsonData) {
-//     // Iterate over each key in the object
-//     Object.keys(jsonData).forEach(holidayName => {
-//         const holiday = jsonData[holidayName];
-//         console.log("HolidayName: " + holidayName);
-//         console.log("Datum: " + holiday.datum);
-//
-//         if(holiday.hinweis !== "") {
-//             console.log("Hinweis: " + holiday.hinweis);
-//         }
-//     });
-// }

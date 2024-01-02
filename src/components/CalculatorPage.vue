@@ -269,9 +269,12 @@ export default {
       </v-col>
     </v-row>
 
-    <v-row justify="center" class="d-flex">
+    <v-row justify="center" class="d-flex"  v-if="optimizedPeriods.length > 0">
       <v-col md="7" sm="8" xs="10">
-        <v-infinite-scroll v-if="optimizedPeriods.length > 0" class="px-10 " :height="450" :onLoad="load">
+        <div class="d-flex flex-row w-100">
+          <h3 class="pl-10"> Folgende Zeiträume wurden gefunden: </h3>
+        </div>
+        <v-infinite-scroll class="px-10 ma-3" :height="450" :onLoad="load">
           <template v-for="(periodData, index) in displayedItems" :key="index">
             <VacationCard :periodData="periodData"/>
           </template>
