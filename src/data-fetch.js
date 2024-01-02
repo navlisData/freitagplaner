@@ -1,3 +1,5 @@
+import {en} from "vuetify/locale";
+
 const WEEKEND = '0 - Wochende';
 const HOLIDAY = '1 - Feiertag';
 const WORKINGDAY = '2 - Arbeitstag';
@@ -23,32 +25,82 @@ export const dataFetch = {
         const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
         const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
             (calculatorProfile.startMonthProf === 0 ? 0 : calculatorProfile.startMonthProf-1),
-            (calculatorProfile.startMonthProf === 11 ? 11 : calculatorProfile.startMonthProf+1));
+            (calculatorProfile.endMonthProf === 11 ? 11 : calculatorProfile.endMonthProf+1));
 
         let startDate = new Date(calculatorProfile.yearProf, calculatorProfile.startMonthProf, 1, 0,0,0);
         let endDate = new Date(calculatorProfile.yearProf, calculatorProfile.endMonthProf, getLastDayOfMonth(calculatorProfile.yearProf, calculatorProfile.endMonthProf), 0,0,0);
 
         console.log(calculatorProfile.correctDatesProf);
         if(calculatorProfile.correctDatesProf) {
-            startDate = new Date(correctDate(rawApiData, startDate, false));
-            endDate = new Date(correctDate(rawApiData, endDate, true));
+            startDate = new Date(correctDate(excludedJsonData, startDate, false));
+            endDate = new Date(correctDate(excludedJsonData, endDate, true));
         }
 
         let dayArray = createDayArray(startDate, endDate, excludedJsonData);
-        // console.log("Dayarray: ", dayArray)
         const splittedPeriods = splitIntoPeriods(dayArray);
-        // console.log("SplittedPeriods: ", splittedPeriods)
         const preparedPeriods = preparePeriodScore(splittedPeriods, false);
-        // console.log("Scored periods: ", preparedPeriods);
+        let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorProfile.minDaysProf, calculatorProfile.maxDaysProf);
+        console.log(optimizedCombinations);
 
+        console.log("Removing combinations. Now: ", optimizedCombinations.length + " items.")
+        // optimizedCombinations = optimizedCombinations.filter(holder => holder.score >= calculateScoreMedian(optimizedCombinations));
+        optimizedCombinations = filterByStandardDeviation(optimizedCombinations);
+        console.log("After removing: ", optimizedCombinations.length + " items.")
+
+        optimizedCombinations.sort((a, b) => b.score - a.score);
+
+        console.log("Best scored periods are: ");
+        const data = concatPeriods(optimizedCombinations, preparedPeriods);
+        console.log("After removing duplicates: ", data)
+    },
+};
+
+//Due merging multiple periods, some days are duplicated and are needed to removed
+function concatPeriods(optimizedCombinations, preparedPeriods) {
+    let combinedPeriods = []
+
+    for(let i = 0; i < optimizedCombinations.length; i++) { //for all combinations
+        const periodPieces = optimizedCombinations[i].bestScoredPeriodPieces; //which can consist of several periods
+        let periodBuilder = []
+        for(let j = 0; j < periodPieces.length; j++) { //for each period-piece
+            const periodEntity = preparedPeriods[periodPieces[j]].period;
+            if(j === 0) {
+                if(periodPieces === 1) {
+                    const periodMetadata = { period: periodEntity, score: optimizedCombinations[i].score}
+                    combinedPeriods.push(periodMetadata)
+                } else {
+                    periodBuilder = periodBuilder.concat(periodEntity)
+                }
+            } else {
+                let periodCopy = periodEntity.slice();
+                let index = 0;
+                while(periodEntity[index] && periodEntity[index].daytype !== WORKINGDAY) {
+                    periodCopy.shift();
+                    index++;
+                }
+                periodBuilder = periodBuilder.concat(periodCopy);
+            }
+        }
+        if (periodBuilder.length > 0) {
+            const periodMetadata = { period: periodBuilder, score: optimizedCombinations[i].score}
+            combinedPeriods.push(periodMetadata);
+            periodBuilder = [];
+        }
+    }
+
+    return combinedPeriods;
+}
+
+function optimizeCombinations(preparedPeriods, minDays, maxDays) {
+
+    function optimizeAndScorePeriods() {
         let bestCombinations = [];
         for(let i = 0; i < preparedPeriods.length; i++) {
-            const combinationsByIndex = findAllPeriodCombinations(preparedPeriods, i, calculatorProfile.minDaysProf, calculatorProfile.maxDaysProf);
-            // console.log(combinationsByIndex);
+            const combinationsByIndex = cleanOutCombinations(findAllPeriodCombinations(preparedPeriods, i, minDays, maxDays));
             let bestScore = 0;
             let bestPeriod = []
             for(let j = 0; j < combinationsByIndex.length; j++) {
-
+                if(addedByOtherPeriod(combinationsByIndex[j])) continue;
                 const { totalWorkingDays, totalNonWorkingDays } = combinationsByIndex[j].reduce((acc, index) => {
                     return {
                         totalWorkingDays: acc.totalWorkingDays + preparedPeriods[index].workingdays,
@@ -57,29 +109,71 @@ export const dataFetch = {
                 }, { totalWorkingDays: 0, totalNonWorkingDays: 0 });
 
                 let score = totalNonWorkingDays !== 0 ? totalNonWorkingDays / totalWorkingDays : 0;
-
                 if(score > bestScore) {
                     bestScore = score;
                     bestPeriod = combinationsByIndex[j];
                 }
             }
-            const holder = {
-                bestScoredPeriod: bestPeriod,
+            const bestCombination = {
+                bestScoredPeriodPieces: bestPeriod,
                 score: bestScore
             }
-            bestCombinations.push(holder)
+            bestCombinations.push(bestCombination)
         }
+        return bestCombinations;
+    }
 
-        console.log("Sorting descending...");
-        bestCombinations.sort((a, b) => b.score - a.score);
-        console.log("Best scored periods are: ");
-        for(let i = 0; i < bestCombinations.length; i++) {
-            for(let j = 0; j < bestCombinations[i].bestScoredPeriod.length; j++) {
-                console.log(preparedPeriods[bestCombinations[i].bestScoredPeriod[j]])
-            }
-        }
-    },
-};
+    let alreadySeen = new Set();
+    function addedByOtherPeriod(combinationByIndex) {
+        const sizeBefore = alreadySeen.size;
+        alreadySeen.add(JSON.stringify(combinationByIndex));
+        return alreadySeen.size === sizeBefore;
+    }
+
+    //Combinations may be built in various order, although they combine the same period-time
+    function cleanOutCombinations(combinationsByIndex) {
+        let uniqueSet = new Set();
+        combinationsByIndex.forEach(arr => {
+            let sortedArr = arr.sort((a, b) => a - b);
+            uniqueSet.add(JSON.stringify(sortedArr));
+        });
+        return Array.from(uniqueSet).map(str => JSON.parse(str));
+    }
+
+    return optimizeAndScorePeriods();
+}
+
+function calculateScoreMedian(bestCombinations) {
+    const scores = bestCombinations.map(bestCombination => bestCombination.score);
+    scores.sort((a, b) => a - b);
+
+    let median;
+    const mid = Math.floor(scores.length / 2);
+    if (scores.length % 2 === 0) {
+        median = (scores[mid - 1] + scores[mid]) / 2;
+    } else {
+        median = scores[mid];
+    }
+    return median;
+}
+
+function filterByStandardDeviation(bestCombinations) {
+    // Extrahiere Scores aus den besten Kombinationen
+    const scores = bestCombinations.map(bestCombination => bestCombination.score);
+
+    // Berechne den Durchschnitt (mean) und die Standardabweichung (stdDev) der Scores
+    const mean = scores.reduce((acc, val) => acc + val, 0) / scores.length;
+    const stdDev = Math.sqrt(
+        scores.map(score => Math.pow(score - mean, 2)).reduce((acc, val) => acc + val, 0) / scores.length
+    );
+
+    // Definiere einen Schwellenwert
+    const threshold =  mean - 0.1 * stdDev;
+
+    // Filtere die besten Kombinationen basierend auf dem Schwellenwert
+    return bestCombinations.filter(bestCombination => bestCombination.score > threshold);
+}
+
 
 function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) {
     let allCombinations = [];
@@ -116,15 +210,6 @@ function getLastDayOfMonth(year, month) {
     return new Date(year, month + 1, 0).getDate();
 }
 
-function getDayCount(startDate, endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // Calculate the difference in milliseconds and convert to days
-    let dayCount = (end - start) / (1000 * 60 * 60 * 24);
-    return dayCount+1; //include the end date as a full day
-}
-
 //Checks on a specific date, if the next or previous days are non-working days > if so, adds them
 function correctDate(rawJsonData, initDate, calculateForward) {
     let correctedDate = new Date(initDate);
@@ -139,30 +224,44 @@ function correctDate(rawJsonData, initDate, calculateForward) {
 }
 
 function createDayArray(startDate, endDate, excludedJsonData) {
-    let dayArray = [];
-    const dayCount = getDayCount(startDate, endDate);
 
-    for(let currDay = 0; currDay < dayCount; currDay++) {
-        let currentDate = new Date(startDate);
-        currentDate.setDate(currentDate.getDate()+currDay);
+    function createArray() {
+        let dayArray = [];
+        const dayCount = getDayCount(startDate, endDate);
 
-        let daytype = null;
-        if(currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-            daytype = WEEKEND;
-        } else if(matchesHoliday(excludedJsonData, new Date(currentDate))) {
-            daytype = HOLIDAY;
-        } else {
-            daytype = WORKINGDAY;
+        for(let currDay = 0; currDay < dayCount; currDay++) {
+            let currentDate = new Date(startDate);
+            currentDate.setDate(currentDate.getDate()+currDay);
+
+            let daytype = null;
+            if(currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+                daytype = WEEKEND;
+            } else if(matchesHoliday(excludedJsonData, new Date(currentDate))) {
+                daytype = HOLIDAY;
+            } else {
+                daytype = WORKINGDAY;
+            }
+
+            let dayEntry = {
+                daytype: daytype,
+                date: currentDate
+            }
+
+            dayArray.push(dayEntry);
         }
-
-        let dayEntry = {
-            daytype: daytype,
-            date: currentDate
-        }
-
-        dayArray.push(dayEntry);
+        return dayArray;
     }
-    return dayArray;
+
+    function getDayCount(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // Calculate the difference in milliseconds and convert to days
+        let dayCount = (end - start) / (1000 * 60 * 60 * 24);
+        return dayCount+1; //include the end date as a full day
+    }
+
+    return createArray();
 }
 
 function splitIntoPeriods(dayEntries) {
@@ -204,7 +303,7 @@ function splitIntoPeriods(dayEntries) {
 }
 
 function preparePeriodScore(periodArray, ignoreUsualWeeks) {
-    let weightedPeriods = [];
+    let preparedPeriods = [];
 
     let scoredPeriod = {
         period: [],
@@ -226,20 +325,15 @@ function preparePeriodScore(periodArray, ignoreUsualWeeks) {
         scoredPeriod.period = periodArray[i];
         scoredPeriod.workingdays = workingdays;
         scoredPeriod.nonworkingdays = nonworkingdays;
-        weightedPeriods.push(scoredPeriod);
+        preparedPeriods.push(scoredPeriod);
 
         scoredPeriod = {
             period: [],
             workingdays: 0,
             nonworkingdays: 0
         }
-
-        //(if its a usual week of 5 workingdays and 4 nonworkingdays AND ignoreUsualWeeks is set) OR calculate for all weeks
-        // if(!(workingdays === 5 && nonworkingdays === 4) && ignoreUsualWeeks || (!ignoreUsualWeeks)) {
-        //
-        // }
     }
-    return weightedPeriods;
+    return preparedPeriods;
 }
 
 //add non-working days at end of the previous period to the start of the currentPeriod

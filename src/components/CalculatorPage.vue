@@ -47,7 +47,7 @@ export default {
       years: [], //values set in created()
 
       //Max. vacation days
-      sliderValues: [3, 21],
+      sliderValues: [6, 21],
 
       //Month selection
       monthValues: {
