@@ -1,10 +1,11 @@
 import {en} from "vuetify/locale";
 
-const WEEKEND = '0 - Wochende';
-const HOLIDAY = '1 - Feiertag';
-const WORKINGDAY = '2 - Arbeitstag';
+const WEEKEND = 'Wochenende';
+const HOLIDAY = 'Feiertag';
+const WORKINGDAY = 'Arbeitstag';
 
 export const dataFetch = {
+
     async fetchApi(year, state) {
         const apiUrl = 'http://localhost:8081/holidays?year=' + year + '&country=' + state;
         console.log("Api Url: ", apiUrl);
@@ -21,7 +22,7 @@ export const dataFetch = {
         }
     },
 
-    async createTokenResult(calculatorProfile) {
+    async getOptimizedPeriods(calculatorProfile) {
         const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
         const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
             (calculatorProfile.startMonthProf === 0 ? 0 : calculatorProfile.startMonthProf-1),
@@ -43,15 +44,13 @@ export const dataFetch = {
         console.log(optimizedCombinations);
 
         console.log("Removing combinations. Now: ", optimizedCombinations.length + " items.")
-        // optimizedCombinations = optimizedCombinations.filter(holder => holder.score >= calculateScoreMedian(optimizedCombinations));
         optimizedCombinations = filterByStandardDeviation(optimizedCombinations);
         console.log("After removing: ", optimizedCombinations.length + " items.")
 
         optimizedCombinations.sort((a, b) => b.score - a.score);
 
         console.log("Best scored periods are: ");
-        const data = concatPeriods(optimizedCombinations, preparedPeriods);
-        console.log("After removing duplicates: ", data)
+        return concatPeriods(optimizedCombinations, preparedPeriods);
     },
 };
 
@@ -66,7 +65,10 @@ function concatPeriods(optimizedCombinations, preparedPeriods) {
             const periodEntity = preparedPeriods[periodPieces[j]].period;
             if(j === 0) {
                 if(periodPieces === 1) {
-                    const periodMetadata = { period: periodEntity, score: optimizedCombinations[i].score}
+                    const periodMetadata = {
+                        period: periodBuilder, score: optimizedCombinations[i].score,
+                        nonworkingdays: optimizedCombinations[i].nonworkingdays, workingdays: optimizedCombinations[i].workingdays
+                    }
                     combinedPeriods.push(periodMetadata)
                 } else {
                     periodBuilder = periodBuilder.concat(periodEntity)
@@ -82,7 +84,10 @@ function concatPeriods(optimizedCombinations, preparedPeriods) {
             }
         }
         if (periodBuilder.length > 0) {
-            const periodMetadata = { period: periodBuilder, score: optimizedCombinations[i].score}
+            const periodMetadata = {
+                period: periodBuilder, score: optimizedCombinations[i].score,
+                nonworkingdays: optimizedCombinations[i].nonworkingdays, workingdays: optimizedCombinations[i].workingdays
+            }
             combinedPeriods.push(periodMetadata);
             periodBuilder = [];
         }
@@ -99,6 +104,8 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
             const combinationsByIndex = cleanOutCombinations(findAllPeriodCombinations(preparedPeriods, i, minDays, maxDays));
             let bestScore = 0;
             let bestPeriod = []
+            let workingdays = 0;
+            let nonworkingdays = 0;
             for(let j = 0; j < combinationsByIndex.length; j++) {
                 if(addedByOtherPeriod(combinationsByIndex[j])) continue;
                 const { totalWorkingDays, totalNonWorkingDays } = combinationsByIndex[j].reduce((acc, index) => {
@@ -112,10 +119,14 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
                 if(score > bestScore) {
                     bestScore = score;
                     bestPeriod = combinationsByIndex[j];
+                    workingdays = totalWorkingDays;
+                    nonworkingdays = totalNonWorkingDays;
                 }
             }
             const bestCombination = {
                 bestScoredPeriodPieces: bestPeriod,
+                workingdays: workingdays,
+                nonworkingdays: nonworkingdays,
                 score: bestScore
             }
             bestCombinations.push(bestCombination)
@@ -210,13 +221,13 @@ function getLastDayOfMonth(year, month) {
     return new Date(year, month + 1, 0).getDate();
 }
 
-//Checks on a specific date, if the next or previous days are non-working days > if so, adds them
+//Checks on a specific date, if the next or previous days are non-working days > if so, add them
 function correctDate(rawJsonData, initDate, calculateForward) {
     let correctedDate = new Date(initDate);
     let dateToCheck = new Date(correctedDate);
     dateToCheck.setDate(correctedDate.getDate() + (calculateForward ? +1 : -1));
 
-    while((dateToCheck.getDay() === 0 || dateToCheck.getDay() === 6 || matchesHoliday(rawJsonData, new Date(dateToCheck))) && (dateToCheck.getFullYear() === initDate.getFullYear())) {
+    while((dateToCheck.getDay() === 0 || dateToCheck.getDay() === 6 || getMatchingHolidayname(rawJsonData, new Date(dateToCheck))) && (dateToCheck.getFullYear() === initDate.getFullYear())) {
         correctedDate = new Date(dateToCheck);
         dateToCheck.setDate(correctedDate.getDate() + (calculateForward ? +1 : -1));
     }
@@ -224,7 +235,6 @@ function correctDate(rawJsonData, initDate, calculateForward) {
 }
 
 function createDayArray(startDate, endDate, excludedJsonData) {
-
     function createArray() {
         let dayArray = [];
         const dayCount = getDayCount(startDate, endDate);
@@ -234,17 +244,19 @@ function createDayArray(startDate, endDate, excludedJsonData) {
             currentDate.setDate(currentDate.getDate()+currDay);
 
             let daytype = null;
-            if(currentDate.getDay() === 0 || currentDate.getDay() === 6) {
-                daytype = WEEKEND;
-            } else if(matchesHoliday(excludedJsonData, new Date(currentDate))) {
+            const holidayMatch = getMatchingHolidayname(excludedJsonData, new Date(currentDate));
+            if(holidayMatch) {
                 daytype = HOLIDAY;
+            } else if(currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+                daytype = WEEKEND;
             } else {
                 daytype = WORKINGDAY;
             }
 
             let dayEntry = {
                 daytype: daytype,
-                date: currentDate
+                date: currentDate,
+                holidayname: holidayMatch
             }
 
             dayArray.push(dayEntry);
@@ -265,41 +277,58 @@ function createDayArray(startDate, endDate, excludedJsonData) {
 }
 
 function splitIntoPeriods(dayEntries) {
-    let alreadyFoundWorkingday = false; //For the case, that dayEntries starts with a non-working day
-    let periods = [];
+    function createSplittedPeriods() {
+        let alreadyFoundWorkingday = false; //For the case, that dayEntries starts with a non-working day
+        let periods = [];
 
-    let currentPeriod = [];
+        let currentPeriod = [];
 
-    for (let i = 0; i < dayEntries.length; i++) {
-        let entry = dayEntries[i];
-        currentPeriod.push(entry);
+        for (let i = 0; i < dayEntries.length; i++) {
+            let entry = dayEntries[i];
+            currentPeriod.push(entry);
 
-        if (entry.daytype !== WORKINGDAY) {
-            // AND it was the last dayEntry in the array OR the next dayEntry exists and is a WORKINGDAY
-            // and a workingday was already found
-            if(i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].daytype === WORKINGDAY) && alreadyFoundWorkingday === true) {
-                if(periods.length>0) {
-                    fillWithPreviousDays(periods, currentPeriod)
+            if (entry.daytype !== WORKINGDAY) {
+                // AND it was the last dayEntry in the array OR the next dayEntry exists and is a WORKINGDAY
+                // and a workingday was already found
+                if(i === dayEntries.length - 1 || (dayEntries[i + 1] && dayEntries[i + 1].daytype === WORKINGDAY) && alreadyFoundWorkingday === true) {
+                    if(periods.length>0) {
+                        fillWithPreviousDays(periods, currentPeriod)
+                    }
+
+                    // save the currentPeriod and start a new one by resetting currentPeriod
+                    periods.push(currentPeriod);
+                    currentPeriod = [];
                 }
-
-                // save the currentPeriod and start a new one by resetting currentPeriod
-                periods.push(currentPeriod);
-                currentPeriod = [];
+            } else {
+                alreadyFoundWorkingday = true;
             }
-        } else {
-            alreadyFoundWorkingday = true;
+        }
+
+        // add the last period, even if the last dayEntries-Array is a WORKINGDAY
+        if (currentPeriod.length > 0) {
+            if(periods.length>0) {
+                fillWithPreviousDays(periods, currentPeriod)
+            }
+            periods.push(currentPeriod);
+        }
+
+        return periods;
+    }
+
+    //add non-working days at end of the previous period to the start of the currentPeriod
+    function fillWithPreviousDays(periods, currentPeriod) {
+        const prevPeriod = periods[periods.length-1];
+        for(let i = prevPeriod.length; i > 0; i--) {
+            const lastEntryInLastPeriod = prevPeriod[i-1];
+            if(lastEntryInLastPeriod.daytype !== WORKINGDAY) {
+                currentPeriod.unshift(lastEntryInLastPeriod);
+            } else {
+                return;
+            }
         }
     }
 
-    // add the last period, even if the last dayEntries-Array is a WORKINGDAY
-    if (currentPeriod.length > 0) {
-        if(periods.length>0) {
-            fillWithPreviousDays(periods, currentPeriod)
-        }
-        periods.push(currentPeriod);
-    }
-
-    return periods;
+    return createSplittedPeriods();
 }
 
 function preparePeriodScore(periodArray, ignoreUsualWeeks) {
@@ -336,29 +365,16 @@ function preparePeriodScore(periodArray, ignoreUsualWeeks) {
     return preparedPeriods;
 }
 
-//add non-working days at end of the previous period to the start of the currentPeriod
-function fillWithPreviousDays(periods, currentPeriod) {
-    const prevPeriod = periods[periods.length-1];
-    for(let i = prevPeriod.length; i > 0; i--) {
-        const lastEntryInLastPeriod = prevPeriod[i-1];
-        if(lastEntryInLastPeriod.daytype !== WORKINGDAY) {
-            currentPeriod.unshift(lastEntryInLastPeriod);
-        } else {
-            return;
-        }
-    }
-}
-
-function matchesHoliday(jsonData, dateToCheck) {
+function getMatchingHolidayname(jsonData, dateToCheck) {
     for (const holidayName of Object.keys(jsonData)) {
         const holiday = jsonData[holidayName];
         const holidayDate = new Date(holiday.datum);
 
         if (holidayDate.getDate() === dateToCheck.getDate() && (holidayDate.getMonth() === dateToCheck.getMonth())) {
-            return true;
+            return holidayName;
         }
     }
-    return false;
+    return null;
 }
 
 function removeExcludedMonths(jsonData, startMonth, endMonth) {
@@ -372,16 +388,16 @@ function removeExcludedMonths(jsonData, startMonth, endMonth) {
     });
     return filteredHolidays;
 }
-
-function logJson(jsonData) {
-    // Iterate over each key in the object
-    Object.keys(jsonData).forEach(holidayName => {
-        const holiday = jsonData[holidayName];
-        console.log("HolidayName: " + holidayName);
-        console.log("Datum: " + holiday.datum);
-
-        if(holiday.hinweis !== "") {
-            console.log("Hinweis: " + holiday.hinweis);
-        }
-    });
-}
+//
+// function logJson(jsonData) {
+//     // Iterate over each key in the object
+//     Object.keys(jsonData).forEach(holidayName => {
+//         const holiday = jsonData[holidayName];
+//         console.log("HolidayName: " + holidayName);
+//         console.log("Datum: " + holiday.datum);
+//
+//         if(holiday.hinweis !== "") {
+//             console.log("Hinweis: " + holiday.hinweis);
+//         }
+//     });
+// }

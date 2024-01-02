@@ -6,7 +6,7 @@ import HolidayCard from "@/components/calculator/VacationCard.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
 import {dataFetch} from "@/data-fetch.js";
 import {cache} from "@/cache.js";
-import {toRaw} from "vue";
+import {markRaw, ref, toRaw} from "vue";
 
 export default {
   name: "Calculator",
@@ -19,6 +19,7 @@ export default {
 
   data() {
     return {
+      optimizedPeriods: null,
       formValidated: null,
       loading: false,
       // rules: [value => vm.checkApi(value)],
@@ -115,8 +116,10 @@ export default {
             correctDatesProf: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
           };
 
-          const tokenOutput = await dataFetch.createTokenResult(calculateProfile);
-          console.log(tokenOutput)
+          // this.optimizedPeriods = );
+          // console.log("OP: ", toRaw(await dataFetch.getOptimizedPeriods(calculateProfile)));
+          this.optimizedPeriods = (await dataFetch.getOptimizedPeriods(calculateProfile));
+          console.log(toRaw(this.optimizedPeriods));
         } else {
           console.log("Form has errors!");
           //TODO: Show snackbar with error message
@@ -248,15 +251,17 @@ export default {
                 variant="plain"
                 @click="detailsVisible = !detailsVisible"
             >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
-
           </v-form>
 
       </v-col>
     </v-row>
 
-    <v-row>
-      <v-col>
-<!--        <VacationCard :holiday-days="getDummyHolidayArray(3)" :date-range="getDummyDateRange()"/>-->
+    <v-row justify="center" class="d-flex">
+      <v-col md="5" sm="7" xs="10">
+        <VacationCard
+            v-for="(periodData, index) in optimizedPeriods"
+            :key="index"
+            :periodData="periodData"/>
       </v-col>
     </v-row>
 
