@@ -55,6 +55,11 @@
     font-weight: bold;
   }
 
+  .v-list-item .active {
+    color: #263238 !important;
+  }
+
+
   .fade-enter-active,
   .fade-leave-active {
     transition: opacity 0.5s ease;
@@ -68,5 +73,9 @@
   .router-link {
     text-decoration: none;
     color: #CFD8DC;
+  }
+
+  .v-list-item .router-link {
+    color: #455A64;
   }
 </style>

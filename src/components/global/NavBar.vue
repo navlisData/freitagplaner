@@ -1,3 +1,4 @@
+
 <script>
 export default {
   computed: {
@@ -66,7 +67,7 @@ export default {
           prepend-icon="mdi-calendar-clock"
           value="calc-vacation"
       >
-        <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>
+        <router-link  class="router-link" to="/calculate">Urlaub berechnen</router-link>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>

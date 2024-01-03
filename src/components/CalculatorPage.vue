@@ -83,6 +83,7 @@ export default {
 
       //Snackbar
       snackbar: false,
+      snackbarcontent: ''
     }
   },
 
@@ -105,6 +106,7 @@ export default {
 
   methods: {
     async submit() {
+      this.reset();
       this.loading = true;
 
       if(this.formValidated !== null) {
@@ -121,14 +123,27 @@ export default {
             correctDatesProf: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
           };
 
-          this.optimizedPeriods = (await dataFetch.getOptimizedPeriods(calculateProfile));
-          console.log(toRaw(this.optimizedPeriods));
+          const optimizedPeriods = await dataFetch.getOptimizedPeriods(calculateProfile);
+
+          if(optimizedPeriods.length === 0) {
+            this.snackbarcontent = 'Unter diesen Einstellungen wurden keine Zeiträume gefunden';
+            this.snackbar = true;
+          } else {
+            this.optimizedPeriods = await dataFetch.getOptimizedPeriods(calculateProfile);
+          }
         } else {
+          this.snackbarcontent = 'Bitte überprüfe die Felder';
           this.snackbar = true;
         }
       }
 
       this.loading = false;
+    },
+
+    reset() {
+      this.displayedItems = [];
+      this.optimizedPeriods = [];
+      this.loadIndex = 0;
     },
 
     calculateYears() {
@@ -322,5 +337,5 @@ export default {
       timeout="1200"
       location="top"
       color="warning"
-  >Überprüfe bitte Deine Angaben</v-snackbar>
+  >{{snackbarcontent}}</v-snackbar>
 </template>

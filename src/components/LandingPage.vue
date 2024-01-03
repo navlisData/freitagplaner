@@ -1,13 +1,10 @@
 <script>
-import { dataFetch } from '@/data-fetch.js';
-import { cache } from '@/cache.js';
-
-import MonthTimeLine from "./landingpage/MonthTimeLine.vue";
+import {dataFetch} from '@/data-fetch.js';
+import {cache} from '@/cache.js';
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
 import MonthTile from "@/components/landingpage/HolidayTile.vue";
-import {da} from "vuetify/locale";
 
 export default {
   name: 'App',
@@ -16,7 +13,6 @@ export default {
     MonthTile,
     VacationCard,
     ImageHeader,
-    MonthTimeLine,
     FederalStateSelect
   },
 
