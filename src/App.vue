@@ -31,7 +31,7 @@
   /* Gestaltung der Scrollbar für alle Elemente */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #3949AB #E8EAF6;
+    scrollbar-color: #7986CB #E8EAF6;
   }
 
   /* Gestaltung der Scrollbar für Webkit-Browser */
@@ -44,7 +44,7 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: #3949AB; /* Farbe der Scrollbar selbst */
+    background-color: #7986CB; /* Farbe der Scrollbar selbst */
     border-radius: 20px; /* Runde Ecken der Scrollbar */
   }
 

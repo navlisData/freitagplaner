@@ -46,33 +46,24 @@ export default {
 </script>
 
 <template>
-    <v-container fluid>
+  <ImageHeader header="Dein Chef überhäuft Dich schon wieder mit viel zu viel Arbeit und dein Körper schreit nach Urlaub?">
+    <template #subcomponent> <!-- With help of CGPT -->
+      <v-btn variant="outlined" class="ma-6 v-btn&#45;&#45;size-x-large" color="white">
+        <router-link class="router-link calc-btn"  to="/calculate">Jetzt Urlaub optimieren</router-link>
+      </v-btn>
+    </template>
+  </ImageHeader>
 
-      <ImageHeader header="Dein Chef überhäuft Dich schon wieder mit viel zu viel Arbeit und dein Körper schreit nach Urlaub?">
-        <template #subcomponent> <!-- With help of CGPT -->
-          <v-btn variant="outlined" class="ma-6 v-btn&#45;&#45;size-x-large" color="white">
-            <router-link class="router-link calc-btn"  to="/calculate">Jetzt Urlaub optimieren</router-link>
-          </v-btn>
-        </template>
-      </ImageHeader>
-
+  <v-row  justify="center" class="mt-2">
+    <v-col md="4" sm="5" cols="8" >
+      <v-row no-gutters="" justify="center" ><h2>Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2></v-row>
+      <v-row><FederalStateSelect class="mt-2" @update:value="fetchJson($event)"/></v-row>
       <v-row justify="center" >
-        <v-col  md="3" sm="7" xs="10" >
-          <h2 align="center">Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2>
-          <FederalStateSelect
-              class="my-6"
-              @update:value="fetchJson($event)"
-          />
-        </v-col>
+        <MonthTimeLine :holidays="holidayData"/>
       </v-row>
+    </v-col>
+  </v-row>
 
-      <v-row justify="center" >
-        <v-col  md="8" sm="10" xs="11" >
-          <MonthTimeLine :holidays="holidayData"/>
-        </v-col>
-      </v-row>
-
-    </v-container>
 </template>
 
 <style>

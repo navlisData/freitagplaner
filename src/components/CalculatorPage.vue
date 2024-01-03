@@ -80,6 +80,9 @@ export default {
       displayedItems: [],
       optimizedPeriods: [],
       loadIndex: 0,
+
+      //Snackbar
+      snackbar: false,
     }
   },
 
@@ -121,8 +124,7 @@ export default {
           this.optimizedPeriods = (await dataFetch.getOptimizedPeriods(calculateProfile));
           console.log(toRaw(this.optimizedPeriods));
         } else {
-          console.log("Form has errors!");
-          //TODO: Show snackbar with error message
+          this.snackbar = true;
         }
       }
 
@@ -158,156 +160,167 @@ export default {
 </script>
 
 <template>
-    <ImageHeader header="Mehr entspannen mit unserem Rechner">
-      <template #subcomponent> <!-- With help of CGPT -->
-        <h3 class="text-center text-white mt-2">Ermittle jetzt die perfekten Tage, deinen Urlaub zu planen, um mithilfe der Feiertage das Meiste herauszuholen.</h3>
-      </template>
-    </ImageHeader>
+  <ImageHeader header="Mehr entspannen mit unserem Rechner">
+    <template #subcomponent> <!-- With help of CGPT -->
+      <h3 class="text-center text-white mt-2">Ermittle jetzt die perfekten Tage, deinen Urlaub zu planen, um mithilfe der Feiertage das Meiste herauszuholen.</h3>
+    </template>
+  </ImageHeader>
 
-    <v-row no-gutters="" justify="center" class="mt-2">
-      <v-col md="5" sm="7" xs="10">
-        <v-row no-gutters="" justify="center"><h2 >Berechne jetzt Deinen Urlaub!</h2></v-row>
-        <v-row no-gutters="">
-          <v-form class="w-100" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
-            <!-- Basic configuration row -->
-            <v-row no-gutters="" class="ga-4">
-              <FederalStateSelect
-                  :rules="stateSelectRules"
-                  style="flex: 1 1 60%; min-height: 55px;"
+  <v-row no-gutters="" justify="center" class="mt-2">
+    <v-col md="5" sm="7" cols="10">
+      <v-row no-gutters="" class="align-center ga-2" justify="center">
+        <h2 >Berechne jetzt Deinen Urlaub!</h2>
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-icon v-bind="props" icon="mdi-help-circle-outline"/>
+          </template>
+          1) Wähle Dein Bundesland aus<br>2) Gebe Deine Anzahl von Urlaubstagen und das Jahr an<br>
+          3) Wenn Du möchtest, kannst du noch Monate und eine gewünschte Zeitspanne festlegen<br>4) Klicke auf 'Berechnen'
+        </v-tooltip>
+
+      </v-row>
+      <v-row no-gutters="">
+        <v-form class="w-100" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
+          <!-- Basic configuration row -->
+          <v-row no-gutters="" class="ga-4">
+            <FederalStateSelect
+                :rules="stateSelectRules"
+                style="flex: 1 1 60%; min-height: 55px;"
+            />
+
+            <v-row no-gutters="" class="ga-4" style="flex-wrap: nowrap">
+              <v-text-field
+                  v-model="days"
+                  label="Urlaubstage"
+                  :rules="daysRule"
+                  variant="outlined"
+                  style="flex: 1 1 120px; min-height: 55px"
               />
 
-              <v-row no-gutters="" class="ga-4" style="flex-wrap: nowrap">
-                <v-text-field
-                    v-model="days"
-                    label="Urlaubstage"
-                    :rules="daysRule"
-                    variant="outlined"
-                    style="flex: 1 1 120px; min-height: 55px"
-                />
-
-                <v-select
-                    v-model="selectedYear"
-                    :items="years"
-                    density="comfortable"
-                    variant="outlined"
-                    label="Jahr"
-                    style="flex: 1 1 120px; min-height: 55px"
-                />
-              </v-row>
+              <v-select
+                  v-model="selectedYear"
+                  :items="years"
+                  density="comfortable"
+                  variant="outlined"
+                  label="Jahr"
+                  style="flex: 1 1 120px; min-height: 55px"
+              />
             </v-row>
+          </v-row>
 
-            <!-- Detailed configuration row -->
-            <v-col v-if="detailsVisible" class="pa-0">
-              <h3 class="mb-3 text-decoration-underline font-weight-bold">Erweiterte Einstellungen:</h3>
-              <v-row no-gutters class="pt-8">
-                <v-col class="w-100">
-                  <v-range-slider
-                      v-model="selectedMonths"
-                      :ticks="monthValues"
-                      :rules="monthSelectRule"
-                      :direction="this.$vuetify.display.smAndDown ? 'vertical' : 'horizontal'"
-                      min="0"
-                      max="11"
-                      step="1"
-                      show-ticks="always"
-                      thumb-label="always"
-                      tick-size="4"
-                      strict
-                  >
-                    <template v-slot:thumb-label="{ modelValue }">
-                      <v-icon theme="dark" :icon="modelValue === this.selectedMonths[0] ? 'mdi-chevron-right' : 'mdi-chevron-left'"></v-icon>
-                    </template>
-                    <template v-slot:prepend>
-                      <span>
-                        <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
-                        <v-tooltip activator="parent" location="top">
-                          In welchem Zeitraum möchtest du Urlaub nehmen?
-                        </v-tooltip>
-                        Zeitraum
-                      </span>
-                    </template>
-                  </v-range-slider>
-                </v-col>
-              </v-row>
-
-              <v-row no-gutters="" class="pt-8">
-                <v-col class="w-100">
-                  <v-range-slider
-                      v-model="sliderValues"
-                      step="1"
-                      min="1"
-                      :max="days"
-                      :direction="this.$vuetify.display.smAndDown ? 'vertical' : 'horizontal'"
-                      strict
-                      thumb-label="always"
-                  >
-                    <template v-slot:prepend>
-                      <span>
-                        <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
-                        <v-tooltip activator="parent" location="top">
-                          Nach welcher Länge an freien Tagen sollen wir suchen?
-                        </v-tooltip>
-                        Länge
-                      </span>
-                    </template>
-                    <template v-slot:append>
-                      <span>Tage</span>
-                    </template>
-                  </v-range-slider>
-                </v-col>
-              </v-row>
-
-              <v-col class="pa-2">
-                <v-switch
-                    v-if="!(selectedMonths[0] === 0 && selectedMonths[1] === 11)"
-                    color="indigo-darken-3"
-                    v-model="correctDate"
+          <!-- Detailed configuration row -->
+          <v-col v-if="detailsVisible" class="pa-0">
+            <h3 class="mb-3 text-decoration-underline font-weight-bold">Erweiterte Einstellungen:</h3>
+            <div class="px-0 d-flex" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: row' : 'flex-direction: column'">
+              <v-col class="pt-8 px-0 w-100">
+                <v-range-slider
+                    v-model="selectedMonths"
+                    :ticks="monthValues"
+                    :rules="monthSelectRule"
+                    :direction="this.$vuetify.display.mdAndDown ? 'vertical' : 'horizontal'"
+                    min="0"
+                    max="11"
+                    step="1"
+                    show-ticks="always"
+                    thumb-label="always"
+                    tick-size="4"
+                    strict
                 >
-                  <template v-slot:label="">
-                    <span>{{generateSwitchLabel}}</span>
+                  <template v-slot:thumb-label="{ modelValue }">
+                    <v-icon theme="dark" :icon="modelValue === this.selectedMonths[0] ? 'mdi-chevron-right' : 'mdi-chevron-left'"></v-icon>
                   </template>
-                </v-switch>
+                  <template v-slot:prepend>
+                    <div class="d-flex align-center ga-1" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: column' : 'flex-direction: row'">
+                      <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
+                      <v-tooltip activator="parent" location="top">
+                        In welchem Zeitraum möchtest du Urlaub nehmen?
+                      </v-tooltip>
+                      Zeitraum
+                    </div>
+                  </template>
+                </v-range-slider>
               </v-col>
+
+              <v-col class="pt-8 px-0 w-100">
+                <v-range-slider
+                    v-model="sliderValues"
+                    step="1"
+                    min="1"
+                    :max="days ? days : 0"
+                    :direction="this.$vuetify.display.mdAndDown ? 'vertical' : 'horizontal'"
+                    strict
+                    thumb-label="always"
+                >
+                  <template v-slot:prepend>
+                    <div class="d-flex align-center ga-1" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: column' : 'flex-direction: row'">
+                      <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
+                      <v-tooltip activator="parent" location="top">
+                        Nach welcher Länge an freien Tagen sollen wir suchen?
+                      </v-tooltip>
+                      Länge
+                    </div>
+                  </template>
+                </v-range-slider>
+              </v-col>
+            </div>
+
+            <v-col class="pa-2">
+              <v-switch
+                  v-if="!(selectedMonths[0] === 0 && selectedMonths[1] === 11)"
+                  color="indigo-darken-3"
+                  v-model="correctDate"
+              >
+                <template v-slot:label="">
+                  <span>{{generateSwitchLabel}}</span>
+                </template>
+              </v-switch>
             </v-col>
+          </v-col>
 
-            <v-btn
-                :loading="loading"
-                type="submit"
-                class="d-flex mx-auto text-none"
-                color="#4f545c"
-                prepend-icon="mdi-cogs"
-                variant="flat"
-            >Berechnen</v-btn>
+          <v-btn
+              :loading="loading"
+              type="submit"
+              class="d-flex mx-auto text-none"
+              color="#4f545c"
+              prepend-icon="mdi-cogs"
+              variant="flat"
+          >Berechnen</v-btn>
 
-            <v-btn
-                class="d-flex mx-auto text-none"
-                :ripple="false"
-                density="comfortable"
-                :prepend-icon="detailsVisible ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                variant="plain"
-                @click="detailsVisible = !detailsVisible"
-            >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
-          </v-form>
-        </v-row>
-      </v-col>
-    </v-row>
+          <v-btn
+              class="d-flex mx-auto text-none"
+              :ripple="false"
+              density="comfortable"
+              :prepend-icon="detailsVisible ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+              variant="plain"
+              @click="detailsVisible = !detailsVisible"
+          >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
+        </v-form>
+      </v-row>
+    </v-col>
+  </v-row>
+
+  <!--Calculated periods-->
+  <v-row justify="center" class="pb-5" v-if="optimizedPeriods.length > 0">
+    <v-col md="6" sm="8" cols="10">
+      <div class="d-flex flex-row w-100 justify-center">
+        <h3 class="text-decoration-underline font-weight-bold"> Folgende Zeiträume wurden gefunden: </h3>
+      </div>
+      <v-infinite-scroll class="px-10 ma-3" :height="450" :onLoad="load">
+        <template v-for="(periodData, index) in displayedItems" :key="index">
+          <VacationCard :periodData="periodData"/>
+        </template>
+        <template v-slot:empty>
+          <v-alert type="warning">Keine weiteren Vorschläge</v-alert>
+        </template>
+      </v-infinite-scroll>
+    </v-col>
+  </v-row>
 
 
-    <v-row justify="center" class="d-flex"  v-if="optimizedPeriods.length > 0">
-      <v-col md="7" sm="8" xs="10">
-        <div class="d-flex flex-row w-100">
-          <h3 class="pl-10"> Folgende Zeiträume wurden gefunden: </h3>
-        </div>
-        <v-infinite-scroll class="px-10 ma-3" :height="450" :onLoad="load">
-          <template v-for="(periodData, index) in displayedItems" :key="index">
-            <VacationCard :periodData="periodData"/>
-          </template>
-          <template v-slot:empty>
-            <v-alert type="warning">Keine weiteren Vorschläge</v-alert>
-          </template>
-        </v-infinite-scroll>
-
-      </v-col>
-    </v-row>
-<!--  </v-container>-->
+  <v-snackbar
+      v-model="snackbar"
+      timeout="1200"
+      location="top"
+      color="warning"
+  >Überprüfe bitte Deine Angaben</v-snackbar>
 </template>
