@@ -19,13 +19,9 @@ export default {
 
   data() {
     return {
-      displayedItems: [],
-      optimizedPeriods: [],
-      loadIndex: 0,
+      //Form
       formValidated: null,
       loading: false,
-      // rules: [value => vm.checkApi(value)],
-      timeout: null,
 
       //Day field
       days: '30',
@@ -50,7 +46,7 @@ export default {
       years: [], //values set in created()
 
       //Max. vacation days
-      sliderValues: [6, 21],
+      sliderValues: [7, 14],
 
       //Month selection
       monthValues: {
@@ -66,7 +62,7 @@ export default {
         'Juli', 'August', 'September',
         'Oktober', 'November', 'Dezember',
       ],
-      selectedMonths: [3,8],
+      selectedMonths: [0,11],
       monthSelectRule: [
         value => {
           if(value[1] > value[0]) return true
@@ -78,7 +74,12 @@ export default {
       correctDate: true,
 
       //Show details
-      detailsVisible: false
+      detailsVisible: false,
+
+      //Infinite-scroller
+      displayedItems: [],
+      optimizedPeriods: [],
+      loadIndex: 0,
     }
   },
 
@@ -105,7 +106,6 @@ export default {
 
       if(this.formValidated !== null) {
         if (this.formValidated) {
-          console.log("submitted");
 
           const calculateProfile = {
             yearProf: this.selectedYear,
@@ -118,8 +118,6 @@ export default {
             correctDatesProf: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
           };
 
-          // this.optimizedPeriods = );
-          // console.log("OP: ", toRaw(await dataFetch.getOptimizedPeriods(calculateProfile)));
           this.optimizedPeriods = (await dataFetch.getOptimizedPeriods(calculateProfile));
           console.log(toRaw(this.optimizedPeriods));
         } else {
@@ -160,32 +158,32 @@ export default {
 </script>
 
 <template>
-  <v-container fluid>
     <ImageHeader header="Mehr entspannen mit unserem Rechner">
       <template #subcomponent> <!-- With help of CGPT -->
         <h3 class="text-center text-white mt-2">Ermittle jetzt die perfekten Tage, deinen Urlaub zu planen, um mithilfe der Feiertage das Meiste herauszuholen.</h3>
       </template>
     </ImageHeader>
 
-    <v-row justify="center" class="d-flex">
+    <v-row no-gutters="" justify="center" class="mt-2">
       <v-col md="5" sm="7" xs="10">
-        <h2 align="center">Berechne jetzt Deinen Urlaub!</h2>
-          <v-form fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
+        <v-row no-gutters="" justify="center"><h2 >Berechne jetzt Deinen Urlaub!</h2></v-row>
+        <v-row no-gutters="">
+          <v-form class="w-100" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
             <!-- Basic configuration row -->
-            <div class="d-flex flex-row ga-4">
+            <v-row no-gutters="" class="ga-4">
               <FederalStateSelect
                   :rules="stateSelectRules"
-                  style="flex: 1 1 60%; min-height: 55px"
+                  style="flex: 1 1 60%; min-height: 55px;"
               />
 
-              <div class="d-flex ga-4" style="flex: 1 1 40%">
+              <v-row no-gutters="" class="ga-4" style="flex-wrap: nowrap">
                 <v-text-field
                     v-model="days"
                     label="Urlaubstage"
                     :rules="daysRule"
                     variant="outlined"
-                    style="flex: 1 0 120px; min-height: 55px"
-                ></v-text-field>
+                    style="flex: 1 1 120px; min-height: 55px"
+                />
 
                 <v-select
                     v-model="selectedYear"
@@ -193,50 +191,76 @@ export default {
                     density="comfortable"
                     variant="outlined"
                     label="Jahr"
-                    style="flex: 1 0 120px; min-height: 55px"
+                    style="flex: 1 1 120px; min-height: 55px"
                 />
-              </div>
-            </div>
+              </v-row>
+            </v-row>
 
             <!-- Detailed configuration row -->
-            <div v-if="detailsVisible">
-              <span>Erweiterte Einstellungen</span>
-                <v-row>
-                  <v-col class="pa-12">
-                    <v-range-slider
-                        v-model="selectedMonths"
-                        :ticks="monthValues"
-                        :rules="monthSelectRule"
-                        min="0"
-                        max="11"
-                        :step="1"
-                        show-ticks="always"
-                        thumb-label="always"
-                        tick-size="4"
-                        strict
-                    >
-                      <template v-slot:thumb-label="{ modelValue }">
-                        <v-icon theme="dark" :icon="modelValue === this.selectedMonths[0] ? 'mdi-chevron-right' : 'mdi-chevron-left'"></v-icon>
-                      </template>
-                    </v-range-slider>
-                  </v-col>
-                </v-row>
+            <v-col v-if="detailsVisible" class="pa-0">
+              <h3 class="mb-3 text-decoration-underline font-weight-bold">Erweiterte Einstellungen:</h3>
+              <v-row no-gutters class="pt-8">
+                <v-col class="w-100">
+                  <v-range-slider
+                      v-model="selectedMonths"
+                      :ticks="monthValues"
+                      :rules="monthSelectRule"
+                      :direction="this.$vuetify.display.smAndDown ? 'vertical' : 'horizontal'"
+                      min="0"
+                      max="11"
+                      step="1"
+                      show-ticks="always"
+                      thumb-label="always"
+                      tick-size="4"
+                      strict
+                  >
+                    <template v-slot:thumb-label="{ modelValue }">
+                      <v-icon theme="dark" :icon="modelValue === this.selectedMonths[0] ? 'mdi-chevron-right' : 'mdi-chevron-left'"></v-icon>
+                    </template>
+                    <template v-slot:prepend>
+                      <span>
+                        <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
+                        <v-tooltip activator="parent" location="top">
+                          In welchem Zeitraum möchtest du Urlaub nehmen?
+                        </v-tooltip>
+                        Zeitraum
+                      </span>
+                    </template>
+                  </v-range-slider>
+                </v-col>
+              </v-row>
 
-              <v-col class="pa-6">
-                <v-range-slider
-                    v-model="sliderValues"
-                    step="1"
-                    :min="1"
-                    :max="days"
-                    strict
-                    thumb-label="always"
-                ></v-range-slider>
-              </v-col>
+              <v-row no-gutters="" class="pt-8">
+                <v-col class="w-100">
+                  <v-range-slider
+                      v-model="sliderValues"
+                      step="1"
+                      min="1"
+                      :max="days"
+                      :direction="this.$vuetify.display.smAndDown ? 'vertical' : 'horizontal'"
+                      strict
+                      thumb-label="always"
+                  >
+                    <template v-slot:prepend>
+                      <span>
+                        <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
+                        <v-tooltip activator="parent" location="top">
+                          Nach welcher Länge an freien Tagen sollen wir suchen?
+                        </v-tooltip>
+                        Länge
+                      </span>
+                    </template>
+                    <template v-slot:append>
+                      <span>Tage</span>
+                    </template>
+                  </v-range-slider>
+                </v-col>
+              </v-row>
 
               <v-col class="pa-2">
                 <v-switch
                     v-if="!(selectedMonths[0] === 0 && selectedMonths[1] === 11)"
-                    color="primary"
+                    color="indigo-darken-3"
                     v-model="correctDate"
                 >
                   <template v-slot:label="">
@@ -244,8 +268,7 @@ export default {
                   </template>
                 </v-switch>
               </v-col>
-
-            </div>
+            </v-col>
 
             <v-btn
                 :loading="loading"
@@ -265,9 +288,10 @@ export default {
                 @click="detailsVisible = !detailsVisible"
             >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
           </v-form>
-
+        </v-row>
       </v-col>
     </v-row>
+
 
     <v-row justify="center" class="d-flex"  v-if="optimizedPeriods.length > 0">
       <v-col md="7" sm="8" xs="10">
@@ -285,6 +309,5 @@ export default {
 
       </v-col>
     </v-row>
-
-  </v-container>
+<!--  </v-container>-->
 </template>

@@ -36,13 +36,13 @@ export default {
       </div>
     </div>
 
-<!--    <v-btn v-if="$vuetify.display.mdAndUp">-->
-<!--      <router-link class="router-link" to="/">Home</router-link>-->
-<!--    </v-btn>-->
+    <!--    <v-btn v-if="$vuetify.display.mdAndUp">-->
+    <!--      <router-link class="router-link" to="/">Home</router-link>-->
+    <!--    </v-btn>-->
 
-<!--    <v-btn class="nav-btn" v-if="$vuetify.display.mdAndUp">-->
-<!--      <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>-->
-<!--    </v-btn>-->
+    <!--    <v-btn class="nav-btn" v-if="$vuetify.display.mdAndUp">-->
+    <!--      <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>-->
+    <!--    </v-btn>-->
 
     <!-- Spacer to center items -->
     <v-spacer></v-spacer>
@@ -70,7 +70,6 @@ export default {
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
-
 </template>
 
 

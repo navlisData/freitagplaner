@@ -46,7 +46,6 @@
   *::-webkit-scrollbar-thumb {
     background-color: #3949AB; /* Farbe der Scrollbar selbst */
     border-radius: 20px; /* Runde Ecken der Scrollbar */
-    /*border: 3px solid orange;  Rand der Scrollbar */
   }
 
   .active {

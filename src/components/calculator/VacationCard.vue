@@ -87,8 +87,10 @@ export default {
                   <v-tooltip
                       activator="parent"
                       location="top"
-                  >Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
-                    Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen</v-tooltip>
+                  >
+                    Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
+                    Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen
+                  </v-tooltip>
                 </v-chip>
               </div>
             </div>
