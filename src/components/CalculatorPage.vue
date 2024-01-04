@@ -330,7 +330,7 @@ export default {
 
   <v-snackbar
       v-model="snackbar"
-      timeout="1200"
+      timeout="2000"
       location="top"
       color="warning"
   >{{snackbarcontent}}</v-snackbar>
