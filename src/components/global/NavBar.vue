@@ -17,7 +17,7 @@ export default {
 <template>
   <v-app-bar
       absolute
-      color="transparent"
+      :color="this.$route.path === '/functionality' ? 'teal-lighten-1' : 'transparent'"
       dense
       flat
       app
@@ -39,6 +39,10 @@ export default {
 
       <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
         <router-link class="router-link text-uppercase" to="/calculate">Urlaub berechnen</router-link>
+      </v-btn>
+
+      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
+        <router-link class="router-link text-uppercase" to="/functionality">Funktionsweise</router-link>
       </v-btn>
     </div>
 
@@ -65,6 +69,13 @@ export default {
           value="calc-vacation"
       >
         <router-link  class="router-link" to="/calculate">Urlaub berechnen</router-link>
+      </v-list-item>
+
+      <v-list-item
+          prepend-icon="mdi-code-braces"
+          value="functionality"
+      >
+        <router-link class="router-link text-uppercase" to="/functionality">Funktionsweise</router-link>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>

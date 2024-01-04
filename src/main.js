@@ -8,7 +8,8 @@ import * as directives from 'vuetify/directives'
 //Router
 import {createRouter, createWebHashHistory} from "vue-router";
 import LandingPage from "@/components/LandingPage.vue";
-import Calculator from "@/components/CalculatorPage.vue";
+import CalculatorPage from "@/components/CalculatorPage.vue";
+import FunctionalityPage from "@/components/FunctionalityPage.vue";
 
 const vuetify = createVuetify({
     components,
@@ -21,7 +22,8 @@ const app = createApp(App)
 
 const routes = [
     { path: "/", component: LandingPage },
-    { path: "/calculate", component: Calculator }
+    { path: "/calculate", component: CalculatorPage },
+    { path: "/functionality", component: FunctionalityPage }
 ]
 
 const router = createRouter({
