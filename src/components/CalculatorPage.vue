@@ -1,12 +1,11 @@
 <script>
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
-import {de} from "vuetify/locale";
 import HolidayCard from "@/components/calculator/VacationCard.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
 import {dataFetch} from "@/data-fetch.js";
 import {cache} from "@/cache.js";
-import {markRaw, ref, toRaw} from "vue";
+import {toRaw} from "vue";
 
 export default {
   name: "Calculator",
@@ -55,7 +54,6 @@ export default {
         6: 'Jul', 7: 'Aug', 8: 'Sep',
         9: 'Okt', 10: 'Nov', 11: 'Dez',
       },
-
       monthFullNames: [
         'Januar', 'Februar', 'März',
         'April', 'Mai', 'Juni',
@@ -113,23 +111,22 @@ export default {
         if (this.formValidated) {
 
           const calculateProfile = {
-            yearProf: this.selectedYear,
-            stateProf: cache.selectedState,
-            daysProf: this.days,
-            startMonthProf: toRaw(this.selectedMonths[0]), //Returns the raw, original object of a Vue-created proxy.
-            endMonthProf: toRaw(this.selectedMonths[1]), //Returns the raw, original object of a Vue-created proxy.
-            minDaysProf: this.sliderValues[0],
-            maxDaysProf: this.sliderValues[1],
-            correctDatesProf: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
+            year: this.selectedYear,
+            state: cache.selectedState,
+            days: this.days,
+            startMonth: toRaw(this.selectedMonths[0]), //returns the raw, original object of a Vue-created proxy.
+            endMonth: toRaw(this.selectedMonths[1]), //returns the raw, original object of a Vue-created proxy.
+            minDays: this.sliderValues[0],
+            maxDays: this.sliderValues[1],
+            correctDates: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
           };
 
           const optimizedPeriods = await dataFetch.getOptimizedPeriods(calculateProfile);
-
           if(optimizedPeriods.length === 0) {
             this.snackbarcontent = 'Unter diesen Einstellungen wurden keine Zeiträume gefunden';
             this.snackbar = true;
           } else {
-            this.optimizedPeriods = await dataFetch.getOptimizedPeriods(calculateProfile);
+            this.optimizedPeriods = optimizedPeriods;
           }
         } else {
           this.snackbarcontent = 'Bitte überprüfe die Felder';
@@ -147,7 +144,7 @@ export default {
     },
 
     calculateYears() {
-      let initYear = new Date().getFullYear();
+      const initYear = new Date().getFullYear();
       let values = [];
       for(let year = initYear; year < initYear+10; year++) {
         values.push(year);
@@ -198,10 +195,7 @@ export default {
         <v-form class="w-100" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
           <!-- Basic configuration row -->
           <v-row no-gutters="" class="ga-4">
-            <FederalStateSelect
-                :rules="stateSelectRules"
-                style="flex: 1 1 60%; min-height: 55px;"
-            />
+            <FederalStateSelect :rules="stateSelectRules" style="flex: 1 1 60%; min-height: 55px;"/>
 
             <v-row no-gutters="" class="ga-4" style="flex-wrap: nowrap">
               <v-text-field
@@ -285,7 +279,7 @@ export default {
                   color="indigo-darken-3"
                   v-model="correctDate"
               >
-                <template v-slot:label="">
+                <template v-slot:label>
                   <span>{{generateSwitchLabel}}</span>
                 </template>
               </v-switch>
@@ -304,9 +298,10 @@ export default {
           <v-btn
               class="d-flex mx-auto text-none"
               :ripple="false"
+              color="blue-grey-darken-4"
               density="comfortable"
               :prepend-icon="detailsVisible ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-              variant="plain"
+              variant="text"
               @click="detailsVisible = !detailsVisible"
           >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
         </v-form>
@@ -317,8 +312,9 @@ export default {
   <!--Calculated periods-->
   <v-row justify="center" class="pb-5" v-if="optimizedPeriods.length > 0">
     <v-col md="6" sm="8" cols="10">
-      <div class="d-flex flex-row w-100 justify-center">
-        <h3 class="text-decoration-underline font-weight-bold"> Folgende Zeiträume wurden gefunden: </h3>
+      <div class="d-flex flex-column w-100 align-center">
+        <h3 class="text-decoration-underline font-weight-bold">Folgende Zeiträume wurden gefunden:</h3>
+        <span class="font-weight-bold">(Aufsteigend sortiert nach dem Verhältnis von freien- und Arbeitstagen)</span>
       </div>
       <v-infinite-scroll class="px-10 ma-3" :height="450" :onLoad="load">
         <template v-for="(periodData, index) in displayedItems" :key="index">

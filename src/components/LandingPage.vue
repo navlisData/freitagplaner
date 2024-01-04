@@ -4,13 +4,13 @@ import {cache} from '@/cache.js';
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
-import MonthTile from "@/components/landingpage/HolidayTile.vue";
+import HolidayTile from "@/components/landingpage/HolidayTile.vue";
 
 export default {
   name: 'App',
 
   components: {
-    MonthTile,
+    HolidayTile,
     VacationCard,
     ImageHeader,
     FederalStateSelect
@@ -19,6 +19,8 @@ export default {
   data() {
     return {
       holidayData: [],
+
+      snackbar: false,
     }
   },
 
@@ -31,6 +33,7 @@ export default {
       try {
         this.holidayData = await dataFetch.fetchApi(this.getYearToDisplay, stateAbbrv);
       } catch (error) {
+        this.snackbar = true;
         console.error("Failed to fetch holidays:", error);
       }
     },
@@ -41,7 +44,8 @@ export default {
       const date = new Date();
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
-    holidayDataArray(){
+
+    holidayDataArray() { //convert json object to array
       let filteredHolidays = [];
       const jsonData = this.holidayData;
       Object.keys(jsonData).forEach(holidayName => {
@@ -85,13 +89,20 @@ export default {
               v-for="(day, index) in holidayDataArray"
               :key="index"
           >
-            <MonthTile :date="day.date" :name="day.name" :notes="day.notes"/>
+            <HolidayTile :date="day.date" :name="day.name" :notes="day.notes"/>
           </v-slide-group-item>
         </v-slide-group>
       </v-col>
     </v-row>
 
   </div>
+
+  <v-snackbar
+      v-model="snackbar"
+      timeout="1200"
+      location="top"
+      color="error"
+  >Fehler beim Laden der Feiertage</v-snackbar>
 </template>
 
 <style>

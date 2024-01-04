@@ -25,25 +25,22 @@ export default {
     <!-- Hamburger menu icon -->
     <v-app-bar-nav-icon color="white" @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown"/>
 
-    <v-app-bar-title class="text-white">FreiTagPlaner</v-app-bar-title>
+    <v-app-bar-title class="text-white">
+      <div class="d-flex ga-2">
+        <img :width="24" :height="24" src="@/assets/images/logo.png" alt="Logo" />
+        FreiTagPlaner
+      </div>
+    </v-app-bar-title>
 
-    <div class="ga-6 d-flex flex-row">
-      <div v-if="$vuetify.display.mdAndUp">
+    <div class="ga-3 d-flex flex-row">
+      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
         <router-link class="router-link text-uppercase" to="/">Home</router-link>
-      </div>
+      </v-btn>
 
-      <div v-if="$vuetify.display.mdAndUp">
+      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
         <router-link class="router-link text-uppercase" to="/calculate">Urlaub berechnen</router-link>
-      </div>
+      </v-btn>
     </div>
-
-    <!--    <v-btn v-if="$vuetify.display.mdAndUp">-->
-    <!--      <router-link class="router-link" to="/">Home</router-link>-->
-    <!--    </v-btn>-->
-
-    <!--    <v-btn class="nav-btn" v-if="$vuetify.display.mdAndUp">-->
-    <!--      <router-link class="router-link" to="/calculate">Urlaub berechnen</router-link>-->
-    <!--    </v-btn>-->
 
     <!-- Spacer to center items -->
     <v-spacer></v-spacer>

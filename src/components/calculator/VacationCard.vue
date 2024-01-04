@@ -39,10 +39,7 @@ export default {
 </script>
 
 <template>
-  <v-dialog
-      v-model="dialog"
-      width="300px"
-  >
+  <v-dialog v-model="dialog" width="300px">
     <v-card>
       <v-card-text>
         <v-list lines="one">
@@ -84,10 +81,7 @@ export default {
                     prepend-icon="mdi-poll"
                 >
                   {{ parseFloat(toRaw(periodData).score.toFixed(2)) }}
-                  <v-tooltip
-                      activator="parent"
-                      location="top"
-                  >
+                  <v-tooltip activator="parent" location="top">
                     Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
                     Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen
                   </v-tooltip>
@@ -104,25 +98,41 @@ export default {
             </div>
           </div>
         </v-card-item>
-
       </v-card>
 
-      <v-btn
-          v-if="isHovering || selected"
-          color="indigo-lighten-1"
-          density="default"
-          :icon="selected ? 'mdi-star' : 'mdi-star-outline'"
-          style="position: absolute; right: -25px; top: 40%; transform: translateY(-50%); z-index: 2;"
-          @click="selected = !selected"
-      />
-      <v-btn
-          v-if="isHovering"
-          color="indigo-darken-2"
-          density="default"
-          icon="mdi-folder-information"
-          style="position: absolute; right: -25px; top: 80%; transform: translateY(-50%); z-index: 2;"
-          @click="dialog = true"
-      />
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <v-btn
+              v-if="isHovering || selected"
+              density="default"
+              icon
+              color="indigo-lighten-1"
+              v-bind="props"
+              style="position: absolute; right: -25px; top: 40%; transform: translateY(-50%); z-index: 2;"
+              @click="selected = !selected"
+          >
+            <v-icon color="" :icon="selected ? 'mdi-star' : 'mdi-star-outline'"/>
+          </v-btn>
+        </template>
+        <span>Markiere Dir diesen Zeitraum</span>
+      </v-tooltip>
+
+      <v-tooltip location="top" >
+        <template v-slot:activator="{ props }">
+          <v-btn
+              v-if="isHovering"
+              density="default"
+              icon
+              color="indigo-darken-2"
+              v-bind="props"
+              style="position: absolute; right: -25px; top: 80%; transform: translateY(-50%); z-index: 2;"
+              @click="dialog = true"
+          >
+            <v-icon color="" icon="mdi-folder-information"/>
+          </v-btn>
+        </template>
+        <span>Zeige Dir alle enthaltenen Tage an</span>
+      </v-tooltip>
     </div>
 
   </v-hover>

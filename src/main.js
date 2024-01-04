@@ -1,13 +1,14 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
 import App from './App.vue'
-
-//Begin vuetify
+//Vuetify
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+//Router
+import {createRouter, createWebHashHistory} from "vue-router";
+import LandingPage from "@/components/LandingPage.vue";
+import Calculator from "@/components/CalculatorPage.vue";
 
 const vuetify = createVuetify({
     components,
@@ -16,10 +17,6 @@ const vuetify = createVuetify({
 //end vuetify
 
 //Begin router (With help of: //https://www.youtube.com/watch?v=o62BwRSaEHo)
-import {createRouter, createWebHashHistory} from "vue-router";
-import LandingPage from "@/components/LandingPage.vue";
-import Calculator from "@/components/CalculatorPage.vue";
-
 const app = createApp(App)
 
 const routes = [

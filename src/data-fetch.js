@@ -1,5 +1,3 @@
-import {en} from "vuetify/locale";
-
 const WEEKEND = 'Wochenende';
 const HOLIDAY = 'Feiertag';
 const WORKINGDAY = 'Arbeitstag';
@@ -22,47 +20,45 @@ export const dataFetch = {
         }
     },
 
-    async getOptimizedPeriods(calculatorProfile) {
-        const rawApiData = await this.fetchApi(calculatorProfile.yearProf, calculatorProfile.stateProf);
+    async getOptimizedPeriods(calculatorile) {
+        const rawApiData = await this.fetchApi(calculatorile.year, calculatorile.state);
         const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
-            (calculatorProfile.startMonthProf === 0 ? 0 : calculatorProfile.startMonthProf-1),
-            (calculatorProfile.endMonthProf === 11 ? 11 : calculatorProfile.endMonthProf+1));
+            (calculatorile.startMonth === 0 ? 0 : calculatorile.startMonth-1),
+            (calculatorile.endMonth === 11 ? 11 : calculatorile.endMonth+1));
 
-        let startDate = new Date(calculatorProfile.yearProf, calculatorProfile.startMonthProf, 1, 0,0,0);
-        let endDate = new Date(calculatorProfile.yearProf, calculatorProfile.endMonthProf, getLastDayOfMonth(calculatorProfile.yearProf, calculatorProfile.endMonthProf), 0,0,0);
+        let startDate = new Date(calculatorile.year, calculatorile.startMonth, 1, 0,0,0);
+        let endDate = new Date(calculatorile.year, calculatorile.endMonth, getLastDayOfMonth(calculatorile.year, calculatorile.endMonth), 0,0,0);
 
-        console.log(calculatorProfile.correctDatesProf);
-        if(calculatorProfile.correctDatesProf) {
+        if(calculatorile.correctDates) {
             startDate = new Date(correctDate(excludedJsonData, startDate, false));
             endDate = new Date(correctDate(excludedJsonData, endDate, true));
         }
 
-        let dayArray = createDayArray(startDate, endDate, excludedJsonData);
-        const splittedPeriods = splitIntoPeriods(dayArray);
-        const preparedPeriods = preparePeriodScore(splittedPeriods, false);
-        let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorProfile.minDaysProf, calculatorProfile.maxDaysProf);
-        console.log(optimizedCombinations);
+        const dayArray = createDayArray(startDate, endDate, excludedJsonData); //Creates an array with all needed days
+        const splittedPeriods = splitIntoPeriods(dayArray); //Split the array into periods where all periods starts and ends with non working days
+        const preparedPeriods = preparePeriodScore(splittedPeriods); //Count working and nonworking days in every period
+        //Find all period-combinations in given min/max-days and find best scored option
+        let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorile.minDays, calculatorile.maxDays);
 
         console.log("Removing combinations. Now: ", optimizedCombinations.length + " items.")
-        optimizedCombinations = filterByStandardDeviation(optimizedCombinations);
+        optimizedCombinations = filterByStandardDeviation(optimizedCombinations); //Remove periods depending on a certain threshold of score
         console.log("After removing: ", optimizedCombinations.length + " items.")
 
         optimizedCombinations.sort((a, b) => b.score - a.score);
-
-        console.log("Best scored periods are: ");
-        return concatPeriods(optimizedCombinations, preparedPeriods);
+        return mergePeriods(optimizedCombinations, preparedPeriods); //Merge optimized periods together and remove duplicated nonworkingdays
     },
 };
 
-//Due merging multiple periods, some days are duplicated and are needed to removed
-function concatPeriods(optimizedCombinations, preparedPeriods) {
+//Due to the merging multiple periods, some days are duplicated and are needed to removed
+function mergePeriods(optimizedCombinations, preparedPeriods) {
     let combinedPeriods = []
 
     for(let i = 0; i < optimizedCombinations.length; i++) { //for all combinations
         const periodPieces = optimizedCombinations[i].bestScoredPeriodPieces; //which can consist of several periods
-        let periodBuilder = []
+        let periodBuilder = [];
+        let removedNonworkingdays = 0;
         for(let j = 0; j < periodPieces.length; j++) { //for each period-piece
-            const periodEntity = preparedPeriods[periodPieces[j]].period;
+            const singlePeriodPiece = preparedPeriods[periodPieces[j]].period;
             if(j === 0) {
                 if(periodPieces === 1) {
                     const periodMetadata = {
@@ -71,22 +67,24 @@ function concatPeriods(optimizedCombinations, preparedPeriods) {
                     }
                     combinedPeriods.push(periodMetadata)
                 } else {
-                    periodBuilder = periodBuilder.concat(periodEntity)
+                    periodBuilder = periodBuilder.concat(singlePeriodPiece)
                 }
             } else {
-                let periodCopy = periodEntity.slice();
+                //Remove duplicated nonworkingdays in the beginning of every period, starting at index of 1
+                let periodCopy = singlePeriodPiece.slice();
                 let index = 0;
-                while(periodEntity[index] && periodEntity[index].daytype !== WORKINGDAY) {
+                while(singlePeriodPiece[index] && singlePeriodPiece[index].daytype !== WORKINGDAY) {
                     periodCopy.shift();
                     index++;
                 }
+                removedNonworkingdays += index; //Track how many nonworkingdays were removed for substracting of the period-nonworking-days
                 periodBuilder = periodBuilder.concat(periodCopy);
             }
         }
         if (periodBuilder.length > 0) {
             const periodMetadata = {
                 period: periodBuilder, score: optimizedCombinations[i].score,
-                nonworkingdays: optimizedCombinations[i].nonworkingdays, workingdays: optimizedCombinations[i].workingdays
+                nonworkingdays: (optimizedCombinations[i].nonworkingdays - removedNonworkingdays), workingdays: optimizedCombinations[i].workingdays
             }
             combinedPeriods.push(periodMetadata);
             periodBuilder = [];
@@ -98,6 +96,7 @@ function concatPeriods(optimizedCombinations, preparedPeriods) {
 
 function optimizeCombinations(preparedPeriods, minDays, maxDays) {
 
+    //For every single period, build best merged period in range of min/max-days
     function optimizeAndScorePeriods() {
         let bestCombinations = [];
         for(let i = 0; i < preparedPeriods.length; i++) {
@@ -108,6 +107,7 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
             let nonworkingdays = 0;
             for(let j = 0; j < combinationsByIndex.length; j++) {
                 if(addedByOtherPeriod(combinationsByIndex[j])) continue;
+                //Sum day-types of all merged "single-periods" for combination 'j'
                 const { totalWorkingDays, totalNonWorkingDays } = combinationsByIndex[j].reduce((acc, index) => {
                     return {
                         totalWorkingDays: acc.totalWorkingDays + preparedPeriods[index].workingdays,
@@ -151,21 +151,38 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
         return Array.from(uniqueSet).map(str => JSON.parse(str));
     }
 
-    return optimizeAndScorePeriods();
-}
+    //Backtrack algorithm, merge every period with every possible nearby period in day-range of min/max-days
+    function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) {
+        let allCombinations = [];
 
-function calculateScoreMedian(bestCombinations) {
-    const scores = bestCombinations.map(bestCombination => bestCombination.score);
-    scores.sort((a, b) => a - b);
+        function backtrack(combination, currentDayCount, index) {
+            if (currentDayCount <= maxDays) { // Check if the period has a less or equal count of days than given
+                if (currentDayCount >= minDays) {
+                    allCombinations.push(combination.slice()); // save valid combination as soon min-days is reached
+                }
 
-    let median;
-    const mid = Math.floor(scores.length / 2);
-    if (scores.length % 2 === 0) {
-        median = (scores[mid - 1] + scores[mid]) / 2;
-    } else {
-        median = scores[mid];
+                // step one index back and forth
+                [-1, 1].forEach(direction => {
+                    let nextIndex = index + direction;
+                    if (nextIndex >= 0 && nextIndex < periods.length && !combination.includes(nextIndex)) {
+                        combination.push(nextIndex);
+                        backtrack(combination, currentDayCount + cleanPeriodCount(index, nextIndex), nextIndex);
+                        combination.pop(); // reset for the next iteration
+                    }
+                });
+            }
+        }
+
+        //Filters the nextPeriod, removes the entries of the current period and returns the filtered length of the next period (
+        function cleanPeriodCount(currPeriodIndex, nextPeriodIndex) {
+            return periods[nextPeriodIndex].period.filter(np => !periods[currPeriodIndex].period.includes(np)).length;
+        }
+
+        backtrack([startPeriodIndex], periods[startPeriodIndex].period.length, startPeriodIndex);
+        return allCombinations;
     }
-    return median;
+
+    return optimizeAndScorePeriods();
 }
 
 //with help of CGPT
@@ -176,39 +193,8 @@ function filterByStandardDeviation(bestCombinations) {
     const stdDev = Math.sqrt( //clac standard deviation (stdDev) of score
         scores.map(score => Math.pow(score - mean, 2)).reduce((acc, val) => acc + val, 0) / scores.length
     );
-    const threshold = mean - 0.5 * stdDev;
+    const threshold = mean - 0.3 * stdDev;
     return bestCombinations.filter(bestCombination => bestCombination.score > threshold);
-}
-
-function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) {
-    let allCombinations = [];
-
-    function backtrack(combination, currentDayCount, index) {
-        // Check if the period has already more days than given
-        if (currentDayCount <= maxDays) {
-            // save valid combination as soon min-days is reached
-            if (currentDayCount >= minDays) {
-                allCombinations.push(combination.slice());
-            }
-
-            // step one index back and forth
-            [-1, 1].forEach(direction => {
-                let nextIndex = index + direction;
-                if (nextIndex >= 0 && nextIndex < periods.length && !combination.includes(nextIndex)) {
-                    combination.push(nextIndex);
-                    backtrack(combination, currentDayCount + cleanPeriodCount(index, nextIndex), nextIndex);
-                    combination.pop(); // reset for the next iteration
-                }
-            });
-        }
-    }
-
-    function cleanPeriodCount(currPeriodIndex, nextPeriodIndex) {
-        return periods[nextPeriodIndex].period.filter(np => !periods[currPeriodIndex].period.includes(np)).length;
-    }
-
-    backtrack([startPeriodIndex], periods[startPeriodIndex].period.length, startPeriodIndex);
-    return allCombinations;
 }
 
 function getLastDayOfMonth(year, month) {
@@ -325,7 +311,7 @@ function splitIntoPeriods(dayEntries) {
     return createSplittedPeriods();
 }
 
-function preparePeriodScore(periodArray, ignoreUsualWeeks) {
+function preparePeriodScore(periodArray) {
     let preparedPeriods = [];
 
     let scoredPeriod = {
@@ -359,6 +345,7 @@ function preparePeriodScore(periodArray, ignoreUsualWeeks) {
     return preparedPeriods;
 }
 
+//Checks, if the passed 'dateToCheck' is a holiday and returns the name if so
 function getMatchingHolidayname(jsonData, dateToCheck) {
     for (const holidayName of Object.keys(jsonData)) {
         const holiday = jsonData[holidayName];
@@ -371,6 +358,7 @@ function getMatchingHolidayname(jsonData, dateToCheck) {
     return null;
 }
 
+//Reduce amount of json data for faster calculation
 function removeExcludedMonths(jsonData, startMonth, endMonth) {
     let filteredHolidays = {};
     Object.keys(jsonData).forEach(holidayName => {
