@@ -181,7 +181,7 @@ export default {
   <v-row no-gutters="" justify="center" class="mt-2">
     <v-col md="5" sm="7" cols="10">
       <v-row no-gutters="" class="align-center ga-2" justify="center">
-        <h2 >Berechne jetzt Deinen Urlaub!</h2>
+        <h2 class="ma-2">Berechne jetzt Deinen Urlaub!</h2>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-icon v-bind="props" icon="mdi-help-circle-outline"/>
@@ -189,8 +189,8 @@ export default {
           1) Wähle Dein Bundesland aus<br>2) Gebe Deine Anzahl von Urlaubstagen und das Jahr an<br>
           3) Wenn Du möchtest, kannst du noch Monate und eine gewünschte Zeitspanne festlegen<br>4) Klicke auf 'Berechnen'
         </v-tooltip>
-
       </v-row>
+
       <v-row no-gutters="">
         <v-form class="w-100" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
           <!-- Basic configuration row -->
