@@ -17,19 +17,26 @@ export default {
       return 'py-1 px-2 font-italic';
     }
   }
-
-
 }
 </script>
 
 <template>
   <v-row no-gutters="" class="pl-11 pt-11">
-    <v-col md="6" sm="8" cols="10">
-      <v-timeline class="py-8" side="end">
+    <v-col class="my-11 ml-11"  md="6" sm="8" cols="10">
+
+      <v-row no-gutters=""><h1>Die Funktionsweise</h1></v-row>
+      <v-row no-gutters="">
+        <div class="d-flex flex-row ga-2">
+          <h2>Vereinfacht und mit Beispielen erklärt</h2>
+          <a class="usual-anchor" href="https://github.com/navlisData/freitagplaner" target="_blank"><v-icon size="x-large">mdi-github</v-icon></a>
+        </div>
+      </v-row>
+
+      <v-timeline class="my-4" side="end">
         <FunctionalityStep title="#1 API Fetch">
           <template #content>
             <p>
-              Die Feiertags REST API (<a href="https://github.com/bundesAPI/feiertage-api" target="_blank">Github</a>) gibt unter der Berücksichtigung des Jahres und
+              Die Feiertags REST API (<a class="usual-anchor" href="https://github.com/bundesAPI/feiertage-api" target="_blank">Github</a>) gibt unter der Berücksichtigung des Jahres und
               einem Bundesland im Json Format die Namen, Daten sowie teilweise weitere Informationen zurück.
             </p>
             <code :class="codeStyle">https://feiertage-api.de/api/?jahr={{new Date().getFullYear()}}&nur_land=BW</code>
@@ -62,7 +69,7 @@ export default {
               Der Reihenfolge nach wird jede Periode betrachtet und die (falls vorhanden) davor sowie danach liegende(n) Periode(n) darangehangen. Dies geschieht mithilfe eines rekursiven Backtrack Algorithmus so lange,
               bis alle möglichen Kombinationen erstellt wurden, welche in dem gegebenen Zeitraum von der Mindest- und Maximalanzahl der Tage liegen.
             </p>
-            <CustomAccordion title="Beispiel Kombinationen" subtitle="Angenommen, wir sind bei Periode #3, werden vielleicht folgende Perioden kombiniert:">
+            <CustomAccordion title="Beispiel Kombinationen" subtitle="Angenommen, wir sind bei Periode #3, dann werden vielleicht folgende Perioden kombiniert:">
               <template #content>
                 <p>
                   Kombination aus: [1],[2],[3],[4]<br>Kombination aus: [1],[2],[3]<br>Kombination aus: [2],[3],[4]<br>
@@ -164,7 +171,7 @@ export default {
             <p class="pt-1">Jede einzelne Perioden-Kombination aus der Liste der <i>Perioden-Einträge</i> werden nun zu einer endgültigen Periode zusammengefügt.</p>
             <p class="pt-1">So erhalten wir am Schluss eine Liste von Zeiträumen, die in der Regel wieder mit freien Tagen beginnen sowie enden und bei entsprechend ausgewählter Zeitraumlänge mehrere der ursprünglichen Perioden aus <b>Schritt #3</b> umfassen.</p>
 
-            <CustomAccordion title="Zusammengefügte Periode" subtitle="Mit der einzelnen Perioden-Kombination aus vorherigem Beispiel ergibt sich folgende Periode:">
+            <CustomAccordion title="Zusammengefügte Periode" subtitle="Mit der Perioden-Kombination aus vorherigem Beispiel ergibt sich folgende Periode:">
               <template #content>
                 <p>13.01.2024 (Samstag)<br>...<br>28.01.2024 (Sonntag)</p>
               </template>
@@ -183,5 +190,19 @@ export default {
 <style>
   .v-timeline-item__body {
     width: 100%;
+  }
+
+  a.usual-anchor {
+    color: #00695C;
+    text-decoration: none;
+  }
+
+  a.usual-anchor:visited {
+    color: #00695C;
+  }
+
+  a.usual-anchor:hover {
+    color: #004D40;
+    text-decoration: underline;
   }
 </style>

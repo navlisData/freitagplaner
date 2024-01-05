@@ -75,7 +75,7 @@ export default {
           prepend-icon="mdi-code-braces"
           value="functionality"
       >
-        <router-link class="router-link text-uppercase" to="/functionality">Funktionsweise</router-link>
+        <router-link class="router-link" to="/functionality">Funktionsweise</router-link>
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
