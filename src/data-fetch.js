@@ -5,10 +5,8 @@ const WORKINGDAY = 'Arbeitstag';
 export const dataFetch = {
 
     async fetchApi(year, state) {
-        const apiUrl = 'http://localhost:8081/holidays?year=' + year + '&country=' + state;
-        console.log("Api Url: ", apiUrl);
         try {
-            const response = await fetch(apiUrl);
+            const response = await fetch("https://feiertage-api.de/api/?jahr=" + year + "&nur_land=" + state);
             if(response.ok) {
                 return await response.json();
             } else {
@@ -21,6 +19,7 @@ export const dataFetch = {
     },
 
     async getOptimizedPeriods(calculatorile) {
+        // const rawApiData = await this.fetchApi(calculatorile.year, calculatorile.state);
         const rawApiData = await this.fetchApi(calculatorile.year, calculatorile.state);
         const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
             (calculatorile.startMonth === 0 ? 0 : calculatorile.startMonth-1),
