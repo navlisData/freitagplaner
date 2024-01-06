@@ -78,7 +78,7 @@ export default {
       detailsVisible: false,
 
       //toggle-buttons
-      sortMode: 0,
+      sortMode: 2,
       sortDirection: 0,
 
       //Infinite-scroller
@@ -156,18 +156,28 @@ export default {
       this.displayedItems = []
       this.loadIndex = 0;
 
-      if(this.sortMode === 0) { //By score
-        if(this.sortDirection === 0) { //Decending
-          this.optimizedPeriods.sort((a, b) => b.score - a.score);
-        } else {
-          this.optimizedPeriods.sort((a, b) => a.score - b.score);
-        }
-      } else { //By days
-        if(this.sortDirection === 0) { //Decending
-          this.optimizedPeriods.sort((a, b) => b.period.length - a.period.length);
-        } else {
-          this.optimizedPeriods.sort((a, b) => a.period.length - b.period.length);
-        }
+      switch (this.sortMode) {
+        case 0: //Total days
+          if(this.sortDirection === 0) { //Decending
+            this.optimizedPeriods.sort((a, b) => b.period.length - a.period.length);
+          } else {
+            this.optimizedPeriods.sort((a, b) => a.period.length - b.period.length);
+          }
+          break;
+        case 1: //Vacation days
+          if(this.sortDirection === 0) { //Decending
+            this.optimizedPeriods.sort((a, b) => b.workingdays - a.workingdays);
+          } else {
+            this.optimizedPeriods.sort((a, b) => a.workingdays - b.workingdays);
+          }
+          break;
+        case 2: //By score
+          if(this.sortDirection === 0) { //Decending
+            this.optimizedPeriods.sort((a, b) => b.score - a.score);
+          } else {
+            this.optimizedPeriods.sort((a, b) => a.score - b.score);
+          }
+          break;
       }
     },
 
@@ -369,19 +379,21 @@ export default {
             height
             mandatory
         >
-          <v-btn size="small" @click="sortResults">
-            <span class="hidden-sm-and-down">Score</span>
-            <v-icon end>
-              mdi-format-align-justify
-            </v-icon>
+          <v-btn @click="sortDirection = 0; sortResults()">
+            <span class="hidden-sm-and-down">Gesamt Tage</span>
+            <v-icon icon="mdi-beach" end/>
           </v-btn>
 
-          <v-btn size="small" @click="sortResults">
-            <span class="hidden-sm-and-down">Freie Tage</span>
-            <v-icon end>
-              mdi-format-align-justify
-            </v-icon>
+          <v-btn  @click="sortDirection = 1; sortResults()">
+            <span class="hidden-sm-and-down">Urlaubstage</span>
+            <v-icon icon="mdi-calendar-remove" end/>
           </v-btn>
+
+          <v-btn @click="sortDirection = 0; sortResults()">
+            <span class="hidden-sm-and-down">Score</span>
+            <v-icon icon="mdi-poll" end/>
+          </v-btn>
+
         </v-btn-toggle>
 
         <v-btn-toggle

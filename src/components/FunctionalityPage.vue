@@ -137,21 +137,21 @@ export default {
           </template>
         </FunctionalityStep>
 
-        <FunctionalityStep title="#7 Sortieren der Kombinationen">
-          <template #content>
-            <p> Um das Ergebnis am Schluss auch übersichtlich darstellen zu können, werden nun in einem Zwischenschritt alle Perioden-Kombinationen nach ihrem Score absteigend sortiert.</p>
-            <CustomAccordion title="Beispiel Sortierung" subtitle="Mit den übrig gebliebenen Kombinationen aus vorheriger Darstellung sähe das so aus:">
-              <template #content>
-                <p>2.33<br>1.75<br>1.50<br>1.38<br>1.38<br>1.33</p>
-              </template>
-            </CustomAccordion>
-          </template>
-        </FunctionalityStep>
+<!--        <FunctionalityStep title="#7 Sortieren der Kombinationen">-->
+<!--          <template #content>-->
+<!--            <p> Um das Ergebnis am Schluss auch übersichtlich darstellen zu können, werden nun in einem Zwischenschritt alle Perioden-Kombinationen nach ihrem Score absteigend sortiert.</p>-->
+<!--            <CustomAccordion title="Beispiel Sortierung" subtitle="Mit den übrig gebliebenen Kombinationen aus vorheriger Darstellung sähe das so aus:">-->
+<!--              <template #content>-->
+<!--                <p>2.33<br>1.75<br>1.50<br>1.38<br>1.38<br>1.33</p>-->
+<!--              </template>-->
+<!--            </CustomAccordion>-->
+<!--          </template>-->
+<!--        </FunctionalityStep>-->
 
-        <FunctionalityStep title="#8 Perioden-Kombinationen zusammenfügen">
+        <FunctionalityStep title="#7 Perioden-Kombinationen zusammenfügen">
           <template #content>
             <p>
-              Übrig bleibt eine Liste von <i>Perioden-Einträgen</i> mit der jeweils (besten) zusammengehörenden Perioden-Kombination, welche es gilt, zusammenzufügen. Zu diesem Zeitpunkt besteht in der Regel ein einzelner Eintrag dieser <i>Perioden-Einträge</i> (sofern eine entsprechende Länge an Tagen ausgewählt wurde) noch aus mehreren einzelnen Perioden,
+              Übrig bleibt eine Liste von <i>Perioden-Einträgen</i> mit der jeweils (besten) zusammengehörenden Perioden-Kombination. Diese gilt es zusammenzufügen. Zu diesem Zeitpunkt besteht in der Regel ein einzelner Eintrag dieser <i>Perioden-Einträge</i> (sofern eine entsprechende Länge an Tagen ausgewählt wurde) noch aus mehreren einzelnen Perioden,
               die in der Regel mit freien Tagen beginnen sowie enden.
             </p>
             <p class="pt-1">Im Falle dessen, dass die Perioden-Kombination des Eintrages tatsächlich aus mehr als einer Periode besteht, überschneiden sich außerdem die freien Tage dieser. Aus diesem Grund werden die entsprechend freien Tage zu Beginn ab der zweiten Periode aus den Perioden entfernt.</p>
