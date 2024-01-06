@@ -45,7 +45,7 @@ export default {
       years: [], //values set in created()
 
       //Max. vacation days
-      sliderValues: [7, 14],
+      sliderValues: [7,30],
 
       //Month selection
       monthValues: {
@@ -71,8 +71,15 @@ export default {
       //Scan next months
       correctDate: true,
 
+      //Saturday as workingday
+      saturdayAsWd: false,
+
       //Show details
       detailsVisible: false,
+
+      //toggle-buttons
+      sortMode: 0,
+      sortDirection: 0,
 
       //Infinite-scroller
       displayedItems: [],
@@ -111,14 +118,15 @@ export default {
         if (this.formValidated) {
 
           const calculateProfile = {
-            year: this.selectedYear,
-            state: cache.selectedState,
-            days: this.days,
+            year: toRaw(this.selectedYear),
+            state: toRaw(cache.selectedState),
+            days: toRaw(this.days),
             startMonth: toRaw(this.selectedMonths[0]), //returns the raw, original object of a Vue-created proxy.
             endMonth: toRaw(this.selectedMonths[1]), //returns the raw, original object of a Vue-created proxy.
-            minDays: this.sliderValues[0],
-            maxDays: this.sliderValues[1],
-            correctDates: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate
+            minDays: toRaw(this.sliderValues[0]),
+            maxDays: toRaw(this.sliderValues[1]),
+            correctDates: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate,
+            saturdayAsWd: toRaw(this.saturdayAsWd)
           };
 
           const optimizedPeriods = await dataFetch.getOptimizedPeriods(calculateProfile);
@@ -127,6 +135,7 @@ export default {
             this.snackbar = true;
           } else {
             this.optimizedPeriods = optimizedPeriods;
+            this.sortResults();
           }
         } else {
           this.snackbarcontent = 'Bitte überprüfe die Felder';
@@ -141,6 +150,25 @@ export default {
       this.displayedItems = [];
       this.optimizedPeriods = [];
       this.loadIndex = 0;
+    },
+
+    sortResults() {
+      this.displayedItems = []
+      this.loadIndex = 0;
+
+      if(this.sortMode === 0) { //By score
+        if(this.sortDirection === 0) { //Decending
+          this.optimizedPeriods.sort((a, b) => b.score - a.score);
+        } else {
+          this.optimizedPeriods.sort((a, b) => a.score - b.score);
+        }
+      } else { //By days
+        if(this.sortDirection === 0) { //Decending
+          this.optimizedPeriods.sort((a, b) => b.period.length - a.period.length);
+        } else {
+          this.optimizedPeriods.sort((a, b) => a.period.length - b.period.length);
+        }
+      }
     },
 
     calculateYears() {
@@ -167,6 +195,14 @@ export default {
         remaining === 0 ? done('empty') : done('ok')
       }, 200);
     },
+
+    monthThumbIcon(modelVal) {
+      if(modelVal === this.selectedMonths[0]) {
+        return this.$vuetify.display.mdAndDown ? 'mdi-chevron-up' : 'mdi-chevron-right';
+      } else {
+        return this.$vuetify.display.mdAndDown ? 'mdi-chevron-down' : 'mdi-chevron-left';
+      }
+    }
   },
 }
 </script>
@@ -179,7 +215,7 @@ export default {
   </ImageHeader>
 
   <v-row no-gutters="" justify="center" class="mt-2">
-    <v-col md="5" sm="7" cols="10">
+    <v-col md="5" sm="7" cols="10" >
       <v-row no-gutters="" class="align-center ga-2" justify="center">
         <h2 class="ma-2">Berechne jetzt Deinen Urlaub!</h2>
         <v-tooltip location="top">
@@ -219,8 +255,9 @@ export default {
 
           <!-- Detailed configuration row -->
           <v-col v-if="detailsVisible" class="pa-0">
-            <h3 class="mb-3 text-decoration-underline font-weight-bold">Erweiterte Einstellungen:</h3>
-            <div class="px-0 d-flex" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: row' : 'flex-direction: column'">
+            <h3 class="text-decoration-underline font-weight-bold">Erweiterte Einstellungen</h3>
+            <span>In welchem Zeitraum möchtest Du suchen und wie viele Deiner Urlaubstage möchtest du verbrauchen?</span>
+            <div class="mt-3 px-0 d-flex" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: row' : 'flex-direction: column'">
               <v-col class="pt-8 px-0 w-100">
                 <v-range-slider
                     v-model="selectedMonths"
@@ -236,7 +273,7 @@ export default {
                     strict
                 >
                   <template v-slot:thumb-label="{ modelValue }">
-                    <v-icon theme="dark" :icon="modelValue === this.selectedMonths[0] ? 'mdi-chevron-right' : 'mdi-chevron-left'"></v-icon>
+                    <v-icon theme="dark" :icon="monthThumbIcon(modelValue)"></v-icon>
                   </template>
                   <template v-slot:prepend>
                     <div class="d-flex align-center ga-1" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: column' : 'flex-direction: row'">
@@ -264,9 +301,9 @@ export default {
                     <div class="d-flex align-center ga-1" :style="this.$vuetify.display.mdAndDown ? 'flex-direction: column' : 'flex-direction: row'">
                       <v-icon color="#3949AB" size="small" icon="mdi-information-slab-circle-outline"/>
                       <v-tooltip activator="parent" location="top">
-                        Nach welcher Länge an freien Tagen sollen wir suchen?
+                        Anzahl Urlaubstage
                       </v-tooltip>
-                      Länge
+                      Tage
                     </div>
                   </template>
                 </v-range-slider>
@@ -274,15 +311,24 @@ export default {
             </div>
 
             <v-col class="pa-2">
-              <v-switch
-                  v-if="!(selectedMonths[0] === 0 && selectedMonths[1] === 11)"
-                  color="indigo-darken-3"
-                  v-model="correctDate"
-              >
-                <template v-slot:label>
-                  <span>{{generateSwitchLabel}}</span>
-                </template>
-              </v-switch>
+              <v-row no-gutters="">
+                <v-switch
+                    v-model="correctDate"
+                    color="indigo-darken-3"
+                    class="toggle"
+                    v-if="!(selectedMonths[0] === 0 && selectedMonths[1] === 11)"
+                    :label="generateSwitchLabel"
+                />
+              </v-row>
+
+              <v-row no-gutters="">
+                <v-switch
+                    v-model="saturdayAsWd"
+                    color="indigo-darken-3"
+                    class="toggle"
+                    label="Samstag als Arbeitstag betrachten"
+                />
+              </v-row>
             </v-col>
           </v-col>
 
@@ -312,11 +358,46 @@ export default {
   <!--Calculated periods-->
   <v-row justify="center" class="pb-5" v-if="optimizedPeriods.length > 0">
     <v-col md="6" sm="8" cols="10">
-      <div class="d-flex flex-column w-100 align-center">
-        <h3 class="text-decoration-underline font-weight-bold">Folgende Zeiträume wurden gefunden:</h3>
-        <span class="font-weight-bold">(Aufsteigend sortiert nach dem Verhältnis von freien- und Arbeitstagen)</span>
-      </div>
-      <v-infinite-scroll class="px-10 ma-3" :height="450" :onLoad="load">
+
+
+      <v-row no-gutters="" justify="end" class="pt-4 pr-10 mr-3 ga-3">
+        <v-btn-toggle
+            v-model="sortMode"
+            divided
+            border
+            density="comfortable"
+            height
+            mandatory
+        >
+          <v-btn size="small" @click="sortResults">
+            <span class="hidden-sm-and-down">Score</span>
+            <v-icon end>
+              mdi-format-align-justify
+            </v-icon>
+          </v-btn>
+
+          <v-btn size="small" @click="sortResults">
+            <span class="hidden-sm-and-down">Freie Tage</span>
+            <v-icon end>
+              mdi-format-align-justify
+            </v-icon>
+          </v-btn>
+        </v-btn-toggle>
+
+        <v-btn-toggle
+            v-model="sortDirection"
+            divided
+            border
+            density="comfortable"
+            flat
+            mandatory
+        >
+          <v-btn icon="mdi-chevron-down" @click="sortResults"/>
+          <v-btn icon="mdi-chevron-up" @click="sortResults"/>
+        </v-btn-toggle>
+      </v-row>
+
+      <v-infinite-scroll class="px-10 ma-3 mt-0" :height="450" :onLoad="load">
         <template v-for="(periodData, index) in displayedItems" :key="index">
           <VacationCard :periodData="periodData"/>
         </template>
@@ -335,3 +416,9 @@ export default {
       color="warning"
   >{{snackbarcontent}}</v-snackbar>
 </template>
+
+<style>
+  .toggle .v-input__details {
+    display: none !important;
+  }
+</style>

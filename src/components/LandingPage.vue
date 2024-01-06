@@ -75,14 +75,14 @@ export default {
 
     <v-row no-gutters="" justify="center">
       <v-col md="4" sm="5" cols="8" >
-        <v-row no-gutters="" class="justify-center mt-2" ><h2>Das sind die Feiertage für das Jahr {{getYearToDisplay}}</h2></v-row>
+        <v-row no-gutters="" class="justify-center mt-2" ><h2>Übersicht der Feiertage für das Jahr {{getYearToDisplay}}</h2></v-row>
         <v-row no-gutters="" >
           <FederalStateSelect class="mt-2" @update:value="fetchJson($event)"/>
         </v-row>
       </v-col>
     </v-row>
 
-    <v-row no-gutters="" justify="center">
+    <v-row no-gutters="" justify="center" class="mb-5">
       <v-col md="9" sm="10" cols="11" >
         <v-slide-group show-arrows>
           <v-slide-group-item

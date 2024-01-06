@@ -67,7 +67,7 @@ export default {
           <template #content>
             <p>
               Der Reihenfolge nach wird jede Periode betrachtet und die (falls vorhanden) davor sowie danach liegende(n) Periode(n) darangehangen. Dies geschieht mithilfe eines rekursiven Backtrack Algorithmus so lange,
-              bis alle möglichen Kombinationen erstellt wurden, welche in dem gegebenen Zeitraum von der Mindest- und Maximalanzahl der Tage liegen.
+              bis alle möglichen Kombinationen erstellt wurden, welche in dem gegebenen Zeitraum von der Mindest- und Maximalanzahl der Urlaubstage liegen.
             </p>
             <CustomAccordion title="Beispiel Kombinationen" subtitle="Angenommen, wir sind bei Periode #3, dann werden vielleicht folgende Perioden kombiniert:">
               <template #content>

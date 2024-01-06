@@ -14,7 +14,8 @@ export default {
     return {
       dialog: false,
       selected: false,
-      days: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+      days: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+      rawData: toRaw(this.periodData)
     }
   },
 
@@ -30,10 +31,15 @@ export default {
 
   computed: {
     buildDateRange() {
-      return this.formatDate(toRaw(this.periodData.period[0].date)) +
+      return this.formatDate(this.rawData.period[0].date) +
       ' - ' +
-      this.formatDate(toRaw(this.periodData.period[toRaw(this.periodData.period.length-1)].date));
-    }
+      this.formatDate(this.rawData.period[this.rawData.period.length-1].date);
+    },
+
+    getVacationDescription() {
+      return this.rawData.workingdays + (this.rawData.workingdays === 1 ? ' Urlaubstag' : ' Urlaubstage') + ' benötigt'
+    },
+
   }
 }
 </script>
@@ -42,9 +48,10 @@ export default {
   <v-dialog v-model="dialog" width="300px">
     <v-card>
       <v-card-text>
-        <v-list lines="one">
+        <h4 class="pb-2">Alle Tage im Zeitraum:</h4>
+        <v-list lines="one" max-height="400">
           <v-list-item
-              v-for="(period, index) in toRaw(periodData.period)"
+              v-for="(period, index) in this.rawData.period"
               :key="index"
               :title="period.holidayname === null ? period.daytype : period.holidayname"
               :subtitle="formatDate(period.date)"
@@ -80,7 +87,8 @@ export default {
                     size="small"
                     prepend-icon="mdi-poll"
                 >
-                  {{ parseFloat(toRaw(periodData).score.toFixed(2)) }}
+                  {{ parseFloat(this.rawData.score.toFixed(2)) }}
+<!--                  {{ parseFloat((this.rawData.nonworkingdays / this.rawData.workingdays).toFixed(2)) }}-->
                   <v-tooltip activator="parent" location="top">
                     Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
                     Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen
@@ -90,11 +98,11 @@ export default {
             </div>
 
             <div class="text-h6 mb-1">
-              {{ toRaw(periodData).period.length }} Tage Urlaub
+              Ermöglicht {{ this.rawData.period.length }} freie Tage
             </div>
             <div class="text-caption d-flex flex-column">
-              <span>{{toRaw(periodData).workingdays}} Arbeitstage</span>
-              <span>{{toRaw(periodData).nonworkingdays}} freie Tage</span>
+              <span class="font-weight-bold">{{getVacationDescription}}</span>
+              <span>{{this.rawData.nonworkingdays}} Wochenend - und Feiertage enthalten</span>
             </div>
           </div>
         </v-card-item>

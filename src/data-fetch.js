@@ -18,33 +18,33 @@ export const dataFetch = {
         }
     },
 
-    async getOptimizedPeriods(calculatorile) {
-        // const rawApiData = await this.fetchApi(calculatorile.year, calculatorile.state);
-        const rawApiData = await this.fetchApi(calculatorile.year, calculatorile.state);
+    async getOptimizedPeriods(calculatorProfile) {
+        // const rawApiData = await this.fetchApi(calculatorProfile.year, calculatorProfile.state);
+        const rawApiData = await this.fetchApi(calculatorProfile.year, calculatorProfile.state);
         const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
-            (calculatorile.startMonth === 0 ? 0 : calculatorile.startMonth-1),
-            (calculatorile.endMonth === 11 ? 11 : calculatorile.endMonth+1));
+            (calculatorProfile.startMonth === 0 ? 0 : calculatorProfile.startMonth-1),
+            (calculatorProfile.endMonth === 11 ? 11 : calculatorProfile.endMonth+1));
 
-        let startDate = new Date(calculatorile.year, calculatorile.startMonth, 1, 0,0,0);
-        let endDate = new Date(calculatorile.year, calculatorile.endMonth, getLastDayOfMonth(calculatorile.year, calculatorile.endMonth), 0,0,0);
+        let startDate = new Date(calculatorProfile.year, calculatorProfile.startMonth, 1, 0,0,0);
+        let endDate = new Date(calculatorProfile.year, calculatorProfile.endMonth, getLastDayOfMonth(calculatorProfile.year, calculatorProfile.endMonth), 0,0,0);
 
-        if(calculatorile.correctDates) {
+        if(calculatorProfile.correctDates) {
             startDate = new Date(correctDate(excludedJsonData, startDate, false));
             endDate = new Date(correctDate(excludedJsonData, endDate, true));
         }
 
-        const dayArray = createDayArray(startDate, endDate, excludedJsonData); //Creates an array with all needed days
+        const dayArray = createDayArray(startDate, endDate, calculatorProfile.saturdayAsWd, excludedJsonData); //Creates an array with all needed days
         const splittedPeriods = splitIntoPeriods(dayArray); //Split the array into periods where all periods starts and ends with non working days
         const preparedPeriods = preparePeriodScore(splittedPeriods); //Count working and nonworking days in every period
         //Find all period-combinations in given min/max-days and find best scored option
-        let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorile.minDays, calculatorile.maxDays);
+        let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorProfile.minDays, calculatorProfile.maxDays);
 
         console.log("Removing combinations. Now: ", optimizedCombinations.length + " items.")
         optimizedCombinations = filterByStandardDeviation(optimizedCombinations); //Remove periods depending on a certain threshold of score
         console.log("After removing: ", optimizedCombinations.length + " items.")
 
-        optimizedCombinations.sort((a, b) => b.score - a.score);
         return mergePeriods(optimizedCombinations, preparedPeriods); //Merge optimized periods together and remove duplicated nonworkingdays
+        // return mergedPeriods.sort((a, b) => b.score - a.score); //Sort descending by score
     },
 };
 
@@ -81,8 +81,12 @@ function mergePeriods(optimizedCombinations, preparedPeriods) {
             }
         }
         if (periodBuilder.length > 0) {
+            let correctedScore = 0;
+            if(optimizedCombinations[i].nonworkingdays - removedNonworkingdays !== 0) {
+                correctedScore = (optimizedCombinations[i].nonworkingdays - removedNonworkingdays) / optimizedCombinations[i].workingdays;
+            }
             const periodMetadata = {
-                period: periodBuilder, score: optimizedCombinations[i].score,
+                period: periodBuilder, score:  correctedScore,
                 nonworkingdays: (optimizedCombinations[i].nonworkingdays - removedNonworkingdays), workingdays: optimizedCombinations[i].workingdays
             }
             combinedPeriods.push(periodMetadata);
@@ -140,7 +144,7 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
         return alreadySeen.size === sizeBefore;
     }
 
-    //Combinations may be built in various order, although they combine the same period-time
+    //Combinations may be built in various order due the backtrack algorithm, although they combine the same period-time
     function cleanOutCombinations(combinationsByIndex) {
         let uniqueSet = new Set();
         combinationsByIndex.forEach(arr => {
@@ -154,9 +158,9 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
     function findAllPeriodCombinations(periods, startPeriodIndex, minDays, maxDays) {
         let allCombinations = [];
 
-        function backtrack(combination, currentDayCount, index) {
-            if (currentDayCount <= maxDays) { // Check if the period has a less or equal count of days than given
-                if (currentDayCount >= minDays) {
+        function backtrack(combination, currentWdDayCount, index) {
+            if (currentWdDayCount <= maxDays) { // Check if the period has a less or equal count of days than given
+                if (currentWdDayCount >= minDays) {
                     allCombinations.push(combination.slice()); // save valid combination as soon min-days is reached
                 }
 
@@ -165,19 +169,20 @@ function optimizeCombinations(preparedPeriods, minDays, maxDays) {
                     let nextIndex = index + direction;
                     if (nextIndex >= 0 && nextIndex < periods.length && !combination.includes(nextIndex)) {
                         combination.push(nextIndex);
-                        backtrack(combination, currentDayCount + cleanPeriodCount(index, nextIndex), nextIndex);
+                        backtrack(combination, currentWdDayCount + cleanPeriodCount(index, nextIndex), nextIndex);
                         combination.pop(); // reset for the next iteration
                     }
                 });
             }
         }
 
-        //Filters the nextPeriod, removes the entries of the current period and returns the filtered length of the next period (
+        //Filters the nextPeriod, removes the days of the current period and returns the filtered length of the next period (
         function cleanPeriodCount(currPeriodIndex, nextPeriodIndex) {
-            return periods[nextPeriodIndex].period.filter(np => !periods[currPeriodIndex].period.includes(np)).length;
+            // return periods[nextPeriodIndex].period.filter(np => !periods[currPeriodIndex].period.includes(np)).length;
+            return periods[nextPeriodIndex].period.filter(day => !periods[currPeriodIndex].period.includes(day)).filter(day => day.daytype === WORKINGDAY).length;
         }
 
-        backtrack([startPeriodIndex], periods[startPeriodIndex].period.length, startPeriodIndex);
+        backtrack([startPeriodIndex], periods[startPeriodIndex].period.filter(day => day.daytype === WORKINGDAY).length, startPeriodIndex);
         return allCombinations;
     }
 
@@ -213,7 +218,7 @@ function correctDate(rawJsonData, initDate, calculateForward) {
     return correctedDate;
 }
 
-function createDayArray(startDate, endDate, excludedJsonData) {
+function createDayArray(startDate, endDate, saturdayAsWd, excludedJsonData) {
     function createArray() {
         let dayArray = [];
         const dayCount = getDayCount(startDate, endDate);
@@ -226,7 +231,7 @@ function createDayArray(startDate, endDate, excludedJsonData) {
             const holidayMatch = getMatchingHolidayname(excludedJsonData, new Date(currentDate));
             if(holidayMatch) {
                 daytype = HOLIDAY;
-            } else if(currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+            } else if(currentDate.getDay() === 0 || (currentDate.getDay() === 6 && !saturdayAsWd)) {
                 daytype = WEEKEND;
             } else {
                 daytype = WORKINGDAY;
@@ -369,3 +374,4 @@ function removeExcludedMonths(jsonData, startMonth, endMonth) {
     });
     return filteredHolidays;
 }
+
