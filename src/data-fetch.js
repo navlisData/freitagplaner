@@ -5,8 +5,10 @@ const WORKINGDAY = 'Arbeitstag';
 export const dataFetch = {
 
     async fetchApi(year, state) {
+        const apiUrl = 'http://localhost:8081/holidays?year=' + year + '&country=' + state;
+        console.log("Api Url: ", apiUrl);
         try {
-            const response = await fetch("https://feiertage-api.de/api/?jahr=" + year + "&nur_land=" + state);
+            const response = await fetch(apiUrl);
             if(response.ok) {
                 return await response.json();
             } else {
