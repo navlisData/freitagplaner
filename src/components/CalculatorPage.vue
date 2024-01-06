@@ -409,7 +409,7 @@ export default {
         </v-btn-toggle>
       </v-row>
 
-      <v-infinite-scroll class="px-10 ma-3 mt-0" :height="450" :onLoad="load">
+      <v-infinite-scroll class="px-10 ma-3 mt-2" :height="450" :onLoad="load">
         <template v-for="(periodData, index) in displayedItems" :key="index">
           <VacationCard :periodData="periodData"/>
         </template>
