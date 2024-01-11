@@ -26,6 +26,11 @@ export default {
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const year = date.getFullYear().toString().slice(-2);
       return this.days[date.getDay()] + ". " + day + "." + month + "." + year;
+    },
+
+    changeSelection() {
+      this.selected = !this.selected;
+      this.$emit('update:selection', this.selected);
     }
   },
 
@@ -117,7 +122,7 @@ export default {
               color="indigo-lighten-1"
               v-bind="props"
               style="position: absolute; right: -25px; top: 40%; transform: translateY(-50%); z-index: 2;"
-              @click="selected = !selected"
+              @click="changeSelection"
           >
             <v-icon color="" :icon="selected ? 'mdi-star' : 'mdi-star-outline'"/>
           </v-btn>

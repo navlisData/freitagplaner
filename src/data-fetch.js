@@ -86,12 +86,22 @@ function mergePeriods(optimizedCombinations, preparedPeriods) {
                 correctedScore = (optimizedCombinations[i].nonworkingdays - removedNonworkingdays) / optimizedCombinations[i].workingdays;
             }
             const periodMetadata = {
-                period: periodBuilder, score:  correctedScore,
+                period: periodBuilder, score:  correctedScore, key: generateUniqueKey(),
                 nonworkingdays: (optimizedCombinations[i].nonworkingdays - removedNonworkingdays), workingdays: optimizedCombinations[i].workingdays
             }
             combinedPeriods.push(periodMetadata);
             periodBuilder = [];
         }
+    }
+
+    function generateUniqueKey() {
+        const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        const charactersLength = characters.length;
+        for (let i = 0; i < 10; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
     }
 
     return combinedPeriods;

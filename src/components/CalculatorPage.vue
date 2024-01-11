@@ -86,6 +86,9 @@ export default {
       optimizedPeriods: [],
       loadIndex: 0,
 
+      //Pinned periods
+      pinnedPeriods: new Map(),
+
       //Snackbar
       snackbar: false,
       snackbarcontent: ''
@@ -211,6 +214,14 @@ export default {
         return this.$vuetify.display.mdAndDown ? 'mdi-chevron-up' : 'mdi-chevron-right';
       } else {
         return this.$vuetify.display.mdAndDown ? 'mdi-chevron-down' : 'mdi-chevron-left';
+      }
+    },
+
+    selectionEvent(selected, periodData) {
+      if(selected) {
+        this.pinnedPeriods.set(periodData.key, periodData);
+      } else {
+        this.pinnedPeriods.delete(periodData.key);
       }
     }
   },
@@ -366,10 +377,8 @@ export default {
   </v-row>
 
   <!--Calculated periods-->
-  <v-row justify="center" class="pb-5" v-if="optimizedPeriods.length > 0">
-    <v-col md="6" sm="8" cols="10">
-
-
+  <v-row justify="center" class="pb-5 ga-6" v-if="optimizedPeriods.length > 0" >
+    <v-col md="5" sm="6" cols="7">
       <v-row no-gutters="" justify="end" class="pt-4 pr-10 mr-3 ga-3">
         <v-btn-toggle
             v-model="sortMode"
@@ -393,7 +402,6 @@ export default {
             <span class="hidden-sm-and-down">Score</span>
             <v-icon icon="mdi-poll" end/>
           </v-btn>
-
         </v-btn-toggle>
 
         <v-btn-toggle
@@ -411,15 +419,21 @@ export default {
 
       <v-infinite-scroll class="px-10 ma-3 mt-2" :height="450" :onLoad="load">
         <template v-for="(periodData, index) in displayedItems" :key="index">
-          <VacationCard :periodData="periodData"/>
+          <VacationCard :periodData="periodData" @update:selection="selectionEvent($event, periodData, index)"/>
         </template>
         <template v-slot:empty>
           <v-alert type="warning">Keine weiteren Vorschläge</v-alert>
         </template>
       </v-infinite-scroll>
     </v-col>
-  </v-row>
 
+    <v-col md="4" sm="8" cols="10" v-if="pinnedPeriods.size > 0" >
+      <h4>Gespeicherte Zeiträume</h4>
+      <v-row class="px-10 ma-3 mt-2" :height="450" v-for="(periodData, index) in this.pinnedPeriods.values()" :key="index">
+        <VacationCard :period-data="periodData"/>
+      </v-row>
+    </v-col>
+  </v-row>
 
   <v-snackbar
       v-model="snackbar"
