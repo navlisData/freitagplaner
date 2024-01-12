@@ -20,7 +20,6 @@ export default {
   },
 
   methods: {
-    toRaw,
     formatDate(date) {
       const day = date.getDate().toString().padStart(2, '0');
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -31,9 +30,9 @@ export default {
 
   computed: {
     buildDateRange() {
-      return this.formatDate(this.rawData.period[0].date) +
+      return this.formatDate(new Date(this.rawData.period[0].date)) +
       ' - ' +
-      this.formatDate(this.rawData.period[this.rawData.period.length-1].date);
+      this.formatDate(new Date(this.rawData.period[this.rawData.period.length-1].date));
     },
 
     getVacationDescription() {

@@ -1,5 +1,4 @@
 <script>
-import {dataFetch} from '@/data-fetch.js';
 import {cache} from '@/cache.js';
 import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
@@ -31,7 +30,20 @@ export default {
   methods: {
     async fetchJson(stateAbbrv) {
       try {
-        this.holidayData = await dataFetch.fetchApi(this.getYearToDisplay, stateAbbrv);
+        const response = await fetch("https://feiertage-api.de/api/?jahr=" + this.getYearToDisplay + "&nur_land=" + stateAbbrv);
+        if(response.ok) {
+          const apiData = await response.json();
+
+          this.holidayData = Object.keys(apiData).map(key => {
+            return {
+              name: key,
+              date: new Date(apiData[key].datum),
+              notes: apiData[key].hinweis
+            };
+          });
+        } else {
+          throw new Error('Network response was not ok.');
+        }
       } catch (error) {
         this.snackbar = true;
         console.error("Failed to fetch holidays:", error);
@@ -45,20 +57,20 @@ export default {
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
 
-    holidayDataArray() { //convert json object to array
-      let filteredHolidays = [];
-      const jsonData = this.holidayData;
-      Object.keys(jsonData).forEach(holidayName => {
-        const holiday = jsonData[holidayName];
-        const data = {
-          name: holidayName,
-          date: new Date(holiday.datum),
-          notes: holiday.hinweis
-        }
-        filteredHolidays.push(data);
-      });
-      return filteredHolidays;
-    }
+    // holidayDataArray() { //convert json object to array
+    //   let filteredHolidays = [];
+    //   const jsonData = this.holidayData;
+    //   Object.keys(jsonData).forEach(holidayName => {
+    //     const holiday = jsonData[holidayName];
+    //     const data = {
+    //       name: holidayName,
+    //       date: new Date(holiday.datum),
+    //       notes: holiday.hinweis
+    //     }
+    //     filteredHolidays.push(data);
+    //   });
+    //   return filteredHolidays;
+    // }
   },
 }
 </script>
@@ -86,7 +98,7 @@ export default {
       <v-col md="9" sm="10" cols="11" >
         <v-slide-group show-arrows>
           <v-slide-group-item
-              v-for="(day, index) in holidayDataArray"
+              v-for="(day, index) in holidayData"
               :key="index"
           >
             <HolidayTile :date="day.date" :name="day.name" :notes="day.notes"/>

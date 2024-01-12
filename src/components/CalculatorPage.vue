@@ -3,7 +3,6 @@ import ImageHeader from "@/components/global/ImageHeader.vue";
 import FederalStateSelect from "@/components/global/FederalStateSelect.vue";
 import HolidayCard from "@/components/calculator/VacationCard.vue";
 import VacationCard from "@/components/calculator/VacationCard.vue";
-import {dataFetch} from "@/data-fetch.js";
 import {cache} from "@/cache.js";
 import {toRaw} from "vue";
 
@@ -116,20 +115,11 @@ export default {
 
       if(this.formValidated !== null) {
         if (this.formValidated) {
-
-          const calculateProfile = {
-            year: toRaw(this.selectedYear),
-            state: toRaw(cache.selectedState),
-            days: toRaw(this.days),
-            startMonth: toRaw(this.selectedMonths[0]), //returns the raw, original object of a Vue-created proxy.
-            endMonth: toRaw(this.selectedMonths[1]), //returns the raw, original object of a Vue-created proxy.
-            minDays: toRaw(this.sliderValues[0]),
-            maxDays: toRaw(this.sliderValues[1]),
-            correctDates: (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate,
-            saturdayAsWd: toRaw(this.saturdayAsWd)
-          };
-
-          const optimizedPeriods = await dataFetch.getOptimizedPeriods(calculateProfile);
+          const fetchedJsonData = await this.fetchPeriods();
+          const optimizedPeriods = Object.values(fetchedJsonData).map(value => {
+            return { ...value };
+          });
+          console.log("op: ", optimizedPeriods);
           if(optimizedPeriods.length === 0) {
             this.snackbarcontent = 'Unter diesen Einstellungen wurden keine Zeiträume gefunden';
             this.snackbar = true;
@@ -144,6 +134,35 @@ export default {
       }
 
       this.loading = false;
+    },
+
+    async fetchPeriods() {
+      const baseUrl = "http://localhost:8081/api";
+      const queryParams = new URLSearchParams();
+
+      queryParams.append('year', toRaw(this.selectedYear));
+      queryParams.append('state', toRaw(cache.selectedState));
+      queryParams.append('days', toRaw(this.days));
+      queryParams.append('startmonth', toRaw(this.selectedMonths[0]));
+      queryParams.append('endmonth', toRaw(this.selectedMonths[1]));
+      queryParams.append('mindays', toRaw(this.sliderValues[0]));
+      queryParams.append('maxdays', toRaw(this.sliderValues[1]));
+      queryParams.append('correctdates', (this.selectedMonths[0] !== 0 || this.selectedMonths[1] !== 11) && this.correctDate);
+      queryParams.append('saturdayaswd', toRaw(this.saturdayAsWd));
+
+      const apiUrl = `${baseUrl}?${queryParams.toString()}`;
+      console.log("Api Url: ", apiUrl);
+      try {
+        const response = await fetch(apiUrl);
+        if(response.ok) {
+          return await response.json();
+        } else {
+          throw new Error('Network response was not ok.');
+        }
+      } catch (ex) {
+        console.error('Error occurred while fetch operation: ', ex);
+        throw ex;
+      }
     },
 
     reset() {

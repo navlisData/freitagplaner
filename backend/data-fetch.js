@@ -2,57 +2,54 @@ const WEEKEND = 'Wochenende';
 const HOLIDAY = 'Feiertag';
 const WORKINGDAY = 'Arbeitstag';
 
-export const dataFetch = {
+module.exports = { getOptimizedPeriods };
 
-    async fetchApi(year, state) {
-        const apiUrl = 'http://localhost:8081/holidays?year=' + year + '&country=' + state;
-        console.log("Api Url: ", apiUrl);
-        try {
-            const response = await fetch(apiUrl);
-            if(response.ok) {
-                return await response.json();
-            } else {
-                throw new Error('Network response was not ok.');
-            }
-        } catch (ex) {
-            console.error('Error occurred while fetch operation: ', ex);
-            throw ex;
+async function fetchApi(year, state) {
+    try {
+        const response = await fetch("https://feiertage-api.de/api/?jahr=" + year + "&nur_land=" + state);
+        if(response.ok) {
+            return await response.json();
+        } else {
+            throw new Error('Network response was not ok.');
         }
-    },
+    } catch (error) {
+        console.error("Failed to fetch holidays:", error);
+    }
+}
 
-    async getOptimizedPeriods(calculatorProfile) {
-        // const rawApiData = await this.fetchApi(calculatorProfile.year, calculatorProfile.state);
-        const rawApiData = await this.fetchApi(calculatorProfile.year, calculatorProfile.state);
-        const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
-            (calculatorProfile.startMonth === 0 ? 0 : calculatorProfile.startMonth-1),
-            (calculatorProfile.endMonth === 11 ? 11 : calculatorProfile.endMonth+1));
+async function getOptimizedPeriods(calculatorProfile) {
+    const rawApiData = await fetchApi(calculatorProfile.year, calculatorProfile.state);
 
-        let startDate = new Date(calculatorProfile.year, calculatorProfile.startMonth, 1, 0,0,0);
-        let endDate = new Date(calculatorProfile.year, calculatorProfile.endMonth, getLastDayOfMonth(calculatorProfile.year, calculatorProfile.endMonth), 0,0,0);
+    if(!rawApiData) return null;
 
-        if(calculatorProfile.correctDates) {
-            startDate = new Date(correctDate(excludedJsonData, startDate, false));
-            endDate = new Date(correctDate(excludedJsonData, endDate, true));
-        }
+    const excludedJsonData = removeExcludedMonths(rawApiData, //reduce json data but substract and add one month for correcting dates
+        (calculatorProfile.startMonth === 0 ? 0 : calculatorProfile.startMonth-1),
+        (calculatorProfile.endMonth === 11 ? 11 : calculatorProfile.endMonth+1));
 
-        const dayArray = createDayArray(startDate, endDate, calculatorProfile.saturdayAsWd, excludedJsonData); //Creates an array with all needed days
-        const splittedPeriods = splitIntoPeriods(dayArray); //Split the array into periods where all periods starts and ends with non working days
-        const preparedPeriods = preparePeriodScore(splittedPeriods); //Count working and nonworking days in every period
-        //Find all period-combinations in given min/max-days and find best scored option
-        let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorProfile.minDays, calculatorProfile.maxDays);
+    let startDate = new Date(calculatorProfile.year, calculatorProfile.startMonth, 1, 0,0,0);
+    let endDate = new Date(calculatorProfile.year, calculatorProfile.endMonth, getLastDayOfMonth(calculatorProfile.year, calculatorProfile.endMonth), 0,0,0);
 
-        console.log("Removing combinations. Now: ", optimizedCombinations.length + " items.")
-        optimizedCombinations = filterByStandardDeviation(optimizedCombinations); //Remove periods depending on a certain threshold of score
-        console.log("After removing: ", optimizedCombinations.length + " items.")
+    if(calculatorProfile.correctDates) {
+        startDate = new Date(correctDate(excludedJsonData, startDate, false));
+        endDate = new Date(correctDate(excludedJsonData, endDate, true));
+    }
 
-        return mergePeriods(optimizedCombinations, preparedPeriods); //Merge optimized periods together and remove duplicated nonworkingdays
-        // return mergedPeriods.sort((a, b) => b.score - a.score); //Sort descending by score
-    },
-};
+    const dayArray = createDayArray(startDate, endDate, calculatorProfile.saturdayAsWd, excludedJsonData); //Creates an array with all needed days
+    const splittedPeriods = splitIntoPeriods(dayArray); //Split the array into periods where all periods starts and ends with non working days
+    const preparedPeriods = preparePeriodScore(splittedPeriods); //Count working and nonworking days in every period
+    //Find all period-combinations in given min/max-days and find best scored option
+    let optimizedCombinations = optimizeCombinations(preparedPeriods, calculatorProfile.minDays, calculatorProfile.maxDays);
+
+    console.log("Removing combinations. Now: ", optimizedCombinations.length + " items.")
+    optimizedCombinations = filterByStandardDeviation(optimizedCombinations); //Remove periods depending on a certain threshold of score
+    console.log("After removing: ", optimizedCombinations.length + " items.")
+
+    return mergePeriods(optimizedCombinations, preparedPeriods); //Merge optimized periods together and remove duplicated nonworkingdays
+}
 
 //Due to the merging multiple periods, some days are duplicated and are needed to removed
 function mergePeriods(optimizedCombinations, preparedPeriods) {
-    let combinedPeriods = []
+    let combinedPeriods = {} //Json object
 
     for(let i = 0; i < optimizedCombinations.length; i++) { //for all combinations
         const periodPieces = optimizedCombinations[i].bestScoredPeriodPieces; //which can consist of several periods
@@ -66,7 +63,7 @@ function mergePeriods(optimizedCombinations, preparedPeriods) {
                         period: periodBuilder, score: optimizedCombinations[i].score,
                         nonworkingdays: optimizedCombinations[i].nonworkingdays, workingdays: optimizedCombinations[i].workingdays
                     }
-                    combinedPeriods.push(periodMetadata)
+                    combinedPeriods[i] = periodMetadata;
                 } else {
                     periodBuilder = periodBuilder.concat(singlePeriodPiece)
                 }
@@ -91,7 +88,7 @@ function mergePeriods(optimizedCombinations, preparedPeriods) {
                 period: periodBuilder, score:  correctedScore,
                 nonworkingdays: (optimizedCombinations[i].nonworkingdays - removedNonworkingdays), workingdays: optimizedCombinations[i].workingdays
             }
-            combinedPeriods.push(periodMetadata);
+            combinedPeriods[i] = periodMetadata;
             periodBuilder = [];
         }
     }
