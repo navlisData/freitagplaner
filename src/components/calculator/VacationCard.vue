@@ -53,7 +53,7 @@ export default {
               v-for="(period, index) in this.rawData.period"
               :key="index"
               :title="period.holidayname === null ? period.daytype : period.holidayname"
-              :subtitle="formatDate(period.date)"
+              :subtitle="formatDate(new Date(period.date))"
           ></v-list-item>
         </v-list>
       </v-card-text>

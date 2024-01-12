@@ -39,7 +39,7 @@ export default {
 
     <v-col md="6" sm="8" cols="10">
       <v-row no-gutters="">
-        <span>Siehe dir den Rechner an, um die Parameter genauer verstehen zu können</span>
+        <span>Siehe Dir den Rechner an, um die Parameter genauer verstehen zu können</span>
       </v-row>
       <v-row no-gutters="" class="pl-11 ">
         <v-timeline class="my-4" side="end">
