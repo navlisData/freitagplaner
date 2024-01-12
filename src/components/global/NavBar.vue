@@ -16,11 +16,9 @@ export default {
 
 <template>
   <v-app-bar
-      absolute
-      :color="this.$route.path === '/functionality' ? 'teal-lighten-1' : 'transparent'"
+      :color="this.$route.path === '/functionality' || this.$route.path === '/api-documentation' ? 'teal-lighten-1' : 'transparent'"
       dense
       flat
-      app
   >
     <!-- Hamburger menu icon -->
     <v-app-bar-nav-icon color="white" @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown"/>
@@ -44,6 +42,10 @@ export default {
       <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
         <router-link class="router-link text-uppercase" to="/functionality">Funktionsweise</router-link>
       </v-btn>
+
+      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
+        <router-link class="router-link text-uppercase" to="/api-documentation">API</router-link>
+      </v-btn>
     </div>
 
     <!-- Spacer to center items -->
@@ -57,26 +59,22 @@ export default {
       v-if="$vuetify.display.smAndDown"
   >
     <v-list density="compact" nav>
-      <v-list-item
-          prepend-icon="mdi-home"
-          value="Home"
-      >
+      <v-list-item prepend-icon="mdi-home" value="Home">
         <router-link class="router-link" to="/">Home</router-link>
       </v-list-item>
 
-      <v-list-item
-          prepend-icon="mdi-calendar-clock"
-          value="calc-vacation"
-      >
+      <v-list-item prepend-icon="mdi-calendar-clock" value="calc-vacation">
         <router-link  class="router-link" to="/calculate">Urlaub berechnen</router-link>
       </v-list-item>
 
-      <v-list-item
-          prepend-icon="mdi-code-braces"
-          value="functionality"
-      >
+      <v-list-item prepend-icon="mdi-code-braces" value="functionality">
         <router-link class="router-link" to="/functionality">Funktionsweise</router-link>
       </v-list-item>
+
+      <v-list-item prepend-icon="mdi-code-braces" value="api-documentation">
+        <router-link class="router-link" to="/api-documentation">API</router-link>
+      </v-list-item>
+
     </v-list>
   </v-navigation-drawer>
 </template>

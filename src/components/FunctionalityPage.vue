@@ -1,5 +1,4 @@
 <script>
-import ImageHeader from "@/components/global/ImageHeader.vue";
 import FunctionalityStep from "@/components/functionality/FunctionalityStep.vue";
 import CustomAccordion from "@/components/functionality/CustomAccordion.vue";
 
@@ -8,7 +7,6 @@ export default {
 
   components: {
     CustomAccordion,
-    ImageHeader,
     FunctionalityStep,
   },
 
@@ -23,12 +21,11 @@ export default {
 <template>
   <v-row no-gutters="" class="pl-11 pt-11">
     <v-col class="my-11 ml-11"  md="6" sm="8" cols="10">
-
       <v-row no-gutters=""><h1>Die Funktionsweise</h1></v-row>
       <v-row no-gutters="">
         <div class="d-flex flex-row ga-2">
-          <h2>Vereinfacht und mit Beispielen erklärt</h2>
-          <a class="usual-anchor" href="https://github.com/navlisData/freitagplaner" target="_blank"><v-icon size="x-large">mdi-github</v-icon></a>
+          <h2>vereinfacht und mit Beispielen erklärt</h2>
+          <a class="usual-anchor" href="https://github.com/navlisData/freitagplaner_backend" target="_blank"><v-icon size="x-large">mdi-github</v-icon></a>
         </div>
       </v-row>
 
@@ -136,17 +133,6 @@ export default {
             </CustomAccordion>
           </template>
         </FunctionalityStep>
-
-<!--        <FunctionalityStep title="#7 Sortieren der Kombinationen">-->
-<!--          <template #content>-->
-<!--            <p> Um das Ergebnis am Schluss auch übersichtlich darstellen zu können, werden nun in einem Zwischenschritt alle Perioden-Kombinationen nach ihrem Score absteigend sortiert.</p>-->
-<!--            <CustomAccordion title="Beispiel Sortierung" subtitle="Mit den übrig gebliebenen Kombinationen aus vorheriger Darstellung sähe das so aus:">-->
-<!--              <template #content>-->
-<!--                <p>2.33<br>1.75<br>1.50<br>1.38<br>1.38<br>1.33</p>-->
-<!--              </template>-->
-<!--            </CustomAccordion>-->
-<!--          </template>-->
-<!--        </FunctionalityStep>-->
 
         <FunctionalityStep title="#7 Perioden-Kombinationen zusammenfügen">
           <template #content>
