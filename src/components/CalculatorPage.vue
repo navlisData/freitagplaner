@@ -137,7 +137,7 @@ export default {
     },
 
     async fetchPeriods() {
-      const baseUrl = "http://localhost:8081/api";
+      const baseUrl = "https://freitagplaner.de/api";
       const queryParams = new URLSearchParams();
 
       queryParams.append('year', toRaw(this.selectedYear));
