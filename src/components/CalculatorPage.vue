@@ -245,8 +245,8 @@ export default {
 
   <v-row no-gutters="" justify="center" class="mt-2">
     <v-col md="5" sm="7" cols="10" >
-      <v-row no-gutters="" class="align-center ga-2" justify="center">
-        <h2 class="ma-2">Berechne jetzt Deinen Urlaub!</h2>
+      <v-row no-gutters="" class="align-center pa-3" justify="center">
+        <h2 class="ma-2 text-center">Berechne jetzt Deinen Urlaub!</h2>
         <v-tooltip location="top">
           <template v-slot:activator="{ props }">
             <v-icon v-bind="props" icon="mdi-help-circle-outline"/>
@@ -257,7 +257,7 @@ export default {
       </v-row>
 
       <v-row no-gutters="">
-        <v-form class="w-100" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
+        <v-form class="w-100 my-4" fast-fail validate-on="blur" @submit.prevent="submit" v-model="formValidated">
           <!-- Basic configuration row -->
           <v-row no-gutters="" class="ga-4">
             <FederalStateSelect :rules="stateSelectRules" style="flex: 1 1 60%; min-height: 55px;"/>
@@ -378,7 +378,7 @@ export default {
               :prepend-icon="detailsVisible ? 'mdi-chevron-up' : 'mdi-chevron-down'"
               variant="text"
               @click="detailsVisible = !detailsVisible"
-          >Details {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
+          >Weitere Konfiguration {{detailsVisible ? "ausblenden" : "einblenden"}}</v-btn>
         </v-form>
       </v-row>
     </v-col>
@@ -386,8 +386,7 @@ export default {
 
   <!--Calculated periods-->
   <v-row justify="center" class="pb-5" v-if="optimizedPeriods.length > 0">
-    <v-col md="6" sm="8" cols="10">
-
+    <v-col md="6" sm="8" cols="11">
 
       <v-row no-gutters="" justify="end" class="pt-4 pr-10 mr-3 ga-3">
         <v-btn-toggle

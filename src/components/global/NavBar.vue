@@ -71,7 +71,7 @@ export default {
         <router-link class="router-link" to="/functionality">Funktionsweise</router-link>
       </v-list-item>
 
-      <v-list-item prepend-icon="mdi-code-braces" value="api-documentation">
+      <v-list-item prepend-icon="mdi-link-variant" value="api-documentation">
         <router-link class="router-link" to="/api-documentation">API</router-link>
       </v-list-item>
 

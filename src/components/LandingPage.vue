@@ -57,20 +57,6 @@ export default {
       return date.getMonth() >= 8 ? date.getFullYear()+1 : date.getFullYear();
     },
 
-    // holidayDataArray() { //convert json object to array
-    //   let filteredHolidays = [];
-    //   const jsonData = this.holidayData;
-    //   Object.keys(jsonData).forEach(holidayName => {
-    //     const holiday = jsonData[holidayName];
-    //     const data = {
-    //       name: holidayName,
-    //       date: new Date(holiday.datum),
-    //       notes: holiday.hinweis
-    //     }
-    //     filteredHolidays.push(data);
-    //   });
-    //   return filteredHolidays;
-    // }
   },
 }
 </script>
@@ -79,7 +65,7 @@ export default {
   <div>
     <ImageHeader header="Dein Chef überhäuft Dich schon wieder mit viel zu viel Arbeit und dein Körper schreit nach Urlaub?">
       <template #subcomponent> <!-- With help of CGPT -->
-        <v-btn variant="outlined" class="ma-6 v-btn&#45;&#45;size-x-large" color="white">
+        <v-btn variant="outlined" class="ma-6" :size="this.$vuetify.display.smAndDown ? 'large' : 'x-large'" color="white">
           <router-link class="router-link calc-btn"  to="/calculate">Jetzt Urlaub optimieren</router-link>
         </v-btn>
       </template>
@@ -87,7 +73,7 @@ export default {
 
     <v-row no-gutters="" justify="center">
       <v-col md="4" sm="5" cols="8" >
-        <v-row no-gutters="" class="justify-center mt-2" ><h2>Übersicht der Feiertage für das Jahr {{getYearToDisplay}}</h2></v-row>
+        <v-row no-gutters="" class="justify-center mt-2" ><h2 class="text-center">Übersicht der Feiertage für das Jahr {{getYearToDisplay}}</h2></v-row>
         <v-row no-gutters="" >
           <FederalStateSelect class="mt-2" @update:value="fetchJson($event)"/>
         </v-row>

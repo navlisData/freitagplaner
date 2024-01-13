@@ -15,7 +15,7 @@ export default {
 
 <template>
 
-  <v-col class="my-11 ml-11 pt-11">
+  <v-col class="my-11 mx-6 pt-11">
     <v-col >
       <v-row no-gutters=""><h1>API Dokumentation</h1></v-row>
       <v-row no-gutters="">
@@ -28,11 +28,8 @@ export default {
 
     <v-col>
       <v-row no-gutters="">
-        <span class="font-weight-bold">Base url:</span>
-      </v-row>
-      <v-row no-gutters="">
         <code>
-          <span>https://freitagplaner.de/api?<b>year</b>=2024&<b>state</b>=BW&<b>days</b>=30&<b>startmonth</b>=0&<b>endmonth</b>=11&<b>mindays</b>=7&<b>maxdays</b>=30&<b>correctdates</b>=false&<b>saturdayaswd</b>=false</span>
+          <span class="text-break">https://freitagplaner.de/api?<b>year</b>=2024&<b>state</b>=BW&<b>days</b>=30&<b>startmonth</b>=0&<b>endmonth</b>=11&<b>mindays</b>=7&<b>maxdays</b>=30&<b>correctdates</b>=false&<b>saturdayaswd</b>=false</span>
         </code>
       </v-row>
     </v-col>
@@ -41,7 +38,7 @@ export default {
       <v-row no-gutters="">
         <span>Siehe Dir den Rechner an, um die Parameter genauer verstehen zu können</span>
       </v-row>
-      <v-row no-gutters="" class="pl-11 ">
+      <v-row no-gutters="" class="pl-5 ">
         <v-timeline class="my-4" side="end">
           <FunctionalityStep title="year">
             <template #content>

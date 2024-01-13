@@ -20,7 +20,7 @@ export default {
 
 <template>
   <v-row no-gutters="" class="pl-11 pt-11">
-    <v-col class="my-11 ml-11"  md="6" sm="8" cols="10">
+    <v-col class="my-11" md="6" sm="8" cols="11">
       <v-row no-gutters=""><h1>Die Funktionsweise</h1></v-row>
       <v-row no-gutters="">
         <div class="d-flex flex-row ga-2">

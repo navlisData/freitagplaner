@@ -16,7 +16,7 @@ export default {
       cover
   >
     <v-row class="fill-height" align="center" justify="center" >
-      <v-col md="5" sm="7" xs="11" class="rounded-lg" style="background-color: rgba(255,255,255, 0.25);">
+      <v-col md="5" sm="7" xs="11" class="rounded-lg ma-8 pa-4" style="background-color: rgba(255,255,255, 0.25);">
         <h2 class="display-3 text-white text-center">{{header}}</h2>
         <v-row justify="center">
           <slot name="subcomponent"/>
