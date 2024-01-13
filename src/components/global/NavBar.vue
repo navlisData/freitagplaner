@@ -19,6 +19,7 @@ export default {
       :color="this.$route.path === '/functionality' || this.$route.path === '/api-documentation' ? 'teal-lighten-1' : 'transparent'"
       dense
       flat
+      absolute
   >
     <!-- Hamburger menu icon -->
     <v-app-bar-nav-icon color="white" @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown"/>
