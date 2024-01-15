@@ -1,7 +1,8 @@
-# Freitagplaner
+# FreiTagPlaner frontend
 
 A simple Vue3 project as part of our studies. Fetch German holidays according to the federal state via an API and calculate the perfect periods to apply for a vacation.
-Use nodejs to setup & deploy!
+
+Have a look [at the nodejs backend repository](https://github.com/navlisData/freitagplaner_backend) for more information about the API and algorithm.
 
 ## Project Setup
 
@@ -15,7 +16,7 @@ npm install
 npm run dev
 ```
 
-### Compile and Minify for Production
+### Compile for Production
 
 ```sh
 npm run build
