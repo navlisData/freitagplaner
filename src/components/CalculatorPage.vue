@@ -25,9 +25,11 @@ export default {
       days: '30',
       daysRule: [
         value => {
-          if (value === '' || value == null) return 'Field cannot be empty';
+          if (value === '' || value == null) return 'Das Feld darf nicht leer sein';
+          //const daysPerYear = ((this.selectedYear % 4 == 0 && this.selectedYear % 100 != 0) || (this.selectedYear % 400 == 0) ? 366 : 365);
+          if (value > this.getDaysByYear()) return 'Soviel Urlaub hast nichtmal du';
           if (/^[0-9]+$/.test(value)) return true;
-          return 'Input has to be a number';
+          return 'Die Eingabe muss eine valide Zahl sein';
         },
       ],
 
@@ -35,7 +37,7 @@ export default {
       stateSelectRules: [
         value => {
           if (value) return true
-          return 'Please select your federal state'
+          return 'Bitte gib dein Bundesland an'
         },
       ],
 
@@ -63,7 +65,7 @@ export default {
       monthSelectRule: [
         value => {
           if(value[1] > value[0]) return true
-          return 'Select at least two months'
+          return 'Wähle mindestens zwei Monate aus'
         }
       ],
 
@@ -231,7 +233,10 @@ export default {
       } else {
         return this.$vuetify.display.mdAndDown ? 'mdi-chevron-down' : 'mdi-chevron-left';
       }
-    }
+    },
+    getDaysByYear() {
+      return ((this.selectedYear % 4 == 0 && this.selectedYear % 100 != 0) || (this.selectedYear % 400 == 0) ? 366 : 365)
+    },    
   },
 }
 </script>
