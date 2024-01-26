@@ -13,7 +13,6 @@
 
 <template>
   <main>
-
     <v-app style="font-family: 'Nunito', cursive; ">
       <NavBar />
 

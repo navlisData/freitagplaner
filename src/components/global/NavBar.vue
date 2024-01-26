@@ -22,7 +22,7 @@ export default {
       absolute
   >
     <!-- Hamburger menu icon -->
-    <v-app-bar-nav-icon color="white" @click.stop="drawer = !drawer" v-if="$vuetify.display.smAndDown"/>
+    <v-app-bar-nav-icon color="white" @click="drawer = !drawer" v-if="$vuetify.display.smAndDown"/>
 
     <v-app-bar-title class="text-white">
       <div class="d-flex ga-2">
@@ -31,20 +31,20 @@ export default {
       </div>
     </v-app-bar-title>
 
-    <div class="ga-3 d-flex flex-row">
-      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
+    <div class="ga-3 d-flex flex-row" v-if="$vuetify.display.mdAndUp">
+      <v-btn variant="text" >
         <router-link class="router-link text-uppercase" to="/">Home</router-link>
       </v-btn>
 
-      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
+      <v-btn variant="text">
         <router-link class="router-link text-uppercase" to="/calculate">Urlaub berechnen</router-link>
       </v-btn>
 
-      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
+      <v-btn variant="text">
         <router-link class="router-link text-uppercase" to="/functionality">Funktionsweise</router-link>
       </v-btn>
 
-      <v-btn variant="text" v-if="$vuetify.display.mdAndUp">
+      <v-btn variant="text">
         <router-link class="router-link text-uppercase" to="/api-documentation">API</router-link>
       </v-btn>
     </div>

@@ -87,7 +87,6 @@ export default {
                     prepend-icon="mdi-poll"
                 >
                   {{ parseFloat(this.rawData.score.toFixed(2)) }}
-<!--                  {{ parseFloat((this.rawData.nonworkingdays / this.rawData.workingdays).toFixed(2)) }}-->
                   <v-tooltip activator="parent" location="top">
                     Dieser Score errechnet sich aus dem Verhältnis der freien Tage und den Arbeitstagen in diesem Zeitraum. <br/>
                     Umso größer, umso besser ist das Verhältnis, in diesem Zeitraum Urlaub zu nehmen

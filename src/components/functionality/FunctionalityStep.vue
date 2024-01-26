@@ -23,7 +23,6 @@ export default {
       <v-row no-gutters="" >
         <slot name="content"/>
       </v-row>
-      <!--    <code class="font-italic">Ich bin ein etest</code>-->
     </div>
 
   </v-timeline-item>

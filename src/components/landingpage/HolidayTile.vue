@@ -79,7 +79,7 @@
       color="blue-grey-lighten-4"
       variant="outlined"
   >
-    <v-card-title  :class="cardStyle">
+    <v-card-title :class="cardStyle">
       <v-icon size="large" :icon="getMonthMetaData().icon"></v-icon>
     </v-card-title>
 

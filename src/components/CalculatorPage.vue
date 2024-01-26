@@ -119,7 +119,7 @@ export default {
           const optimizedPeriods = Object.values(fetchedJsonData).map(value => {
             return { ...value };
           });
-          console.log("op: ", optimizedPeriods);
+
           if(optimizedPeriods.length === 0) {
             this.snackbarcontent = 'Unter diesen Einstellungen wurden keine Zeiträume gefunden';
             this.snackbar = true;
